@@ -69,6 +69,18 @@ function fail_msg(msg) {
 	$('#fail_msg').text(msg).removeClass('hidden');
 }
 
+function initialise_settings() {
+	if (localStorage.getItem('darkmode') === 'true')
+		$('#toggle_dl').trigger('click');
+
+	$('#settings_overlay main .setting').each(function () {
+		const id = $(this).find('input').attr('id');
+
+		if (localStorage.getItem(id) === 'true')
+			$(`#${id}`).prop('checked', true);
+	});
+}
+
 function linkify(text) {
 	return text.replaceAll(url_regex, (url) => {
 		return '<a target="_blank" rel="noopener" href="'
@@ -215,8 +227,7 @@ $(() => {
 		    window.matchMedia('(prefers-color-scheme: dark)').matches);
 	}
 
-	if (localStorage.getItem('darkmode') === 'true')
-		$('#toggle_dl').trigger('click');
+	initialise_settings();
 
 	loader.show();
 
