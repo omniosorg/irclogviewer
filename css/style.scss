@@ -1,0 +1,441 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+
+:root {
+	--omnios-colour:#ff9800;
+	--omnios-colour-pale: rgb(255, 152, 0, .4);
+}
+
+html {
+	font-family: 'Roboto Mono', monospace;
+	font-size: 0.9em;
+
+	--bg-colour: white;
+	--text-colour: black;
+	--loading-overlay-bg: rgba(26, 26, 26, 0.7);
+	--disabled-colour: #ccc;
+	--border-colour: var(--omnios-colour);
+	--status-colour: #ff4500;
+	--channel-hover-bg-colour: #666;
+	--channel-hover-text-colour: white;
+	--topic-bg-colour: #eee;
+	--topic-text-colour: black;
+	--topic-border-colour: #ccc;
+	--datepicker-bg-colour: #eee;
+	--datepicker-text-colour: black;
+	--datepicker-border-colour: #ccc;
+	--ts-link-colour: black;
+	--msg-hover-bg-colour: #eee;
+	--icon-colour: black;
+	--menu-bg-colour: white;
+	--shortcut-key-colour: #ddd;
+}
+
+html:not(.style-scope)[dark] {
+	--bg-colour: #20252b;
+	--text-colour: #c0c0c0;
+	--icon-colour: #c0c0c0;
+	--disabled-colour: #606060;
+	--channel-hover-bg-colour: #364554;
+	--channel-hover-text-colour: #c0c0c0;
+	--ts-link-colour: #c0c0c0;
+	--msg-hover-bg-colour: #364554;
+	--topic-bg-colour: #2e3944;
+	--topic-text-colour: #c0c0c0;
+	--datepicker-bg-colour: #364554;
+	--datepicker-text-colour: #c0c0c0;
+	--datepicker-border-colour: #999;
+	--menu-bg-colour: #2e3944;
+	--shortcut-key-colour: #364554;
+}
+
+body {
+	margin: 0;
+	background: var(--bg-colour);
+	color: var(--text-colour);
+}
+
+a {
+	color: var(--omnios-colour);
+}
+
+.hidden {
+	display: none;
+}
+
+#loading_overlay {
+	display: none;
+	background: var(--loading-overlay-bg);
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	z-index: 9999;
+	top: 0;
+}
+
+#loading_container {
+	display: none;
+	position: fixed;
+	z-index: 7;
+	top: 50%;
+	left: 50%;
+	transform: translate( -50%, -50% );
+}
+
+#overlay {
+	position: fixed;
+	display: none;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0,0,0,0.5);
+	z-index: 999;
+
+	& > * {
+		display: none;
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 40vw;
+		padding: 2em;
+		min-height: 20vh;
+		transform: translate(-50%,-50%);
+		-ms-transform: translate(-50%,-50%);
+		background: var(--topic-bg-colour);
+		color: var(--topic-text-colour);
+
+		header {
+			cursor: pointer;
+			display: flex;
+			justify-content: space-between;
+			margin-bottom: .5em;
+			padding-bottom: .7em;
+			border-bottom: 1px solid var(--topic-border-colour);
+
+			h3 {
+				margin: 0;
+			}
+		}
+	}
+
+	#help_overlay {
+		cursor: pointer;
+
+		main {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+
+			.shortcut {
+				margin: 1em 0;
+
+				.key {
+					background: var(--shortcut-key-colour);
+					padding: 3px 9px;
+					border-radius: 5px;
+				}
+			}
+		}
+	}
+}
+
+#menu {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+
+	padding: 0.5em 2em;
+	position: fixed;
+	top: 0;
+	z-index: 10;
+	width: calc(100vw - 4em);
+	background: var(--menu-bg-colour);
+
+	#title {
+		color: var(--omnios-colour);
+		padding-right: 1em;
+	}
+
+	.fa, .fas, .far {
+		padding: 0 .2em;
+		cursor: pointer;
+		color: var(--icon-colour);
+	}
+
+	.disabled {
+		.fa, .fas, .far {
+			color: var(--disabled-colour);
+		}
+	}
+
+	#datepicker_container {
+		display: inline;
+
+		.fa, .fas, .far {
+			position: relative;
+			top: .1em;
+		}
+	}
+
+	#datepicker {
+		width: 12ch;
+		background: var(--datepicker-bg-colour);
+		color: var(--datepicker-text-colour);
+		border: 1px solid var(--datepicker-border-colour);
+		outline: none;
+		vertical-align: middle;
+		border-radius: 0;
+		-webkit-appearance: none;
+		-webkit-box-shadow: none;
+		-moz-box-shadow: none;
+	}
+
+	#toggle_sys {
+		&.on {
+			.fas {
+				color: var(--status-colour);
+			}
+		}
+	}
+
+	#toggle_sys_info {
+		color: var(--status-colour);
+		font-size: 0.8em;
+		margin-left: -5px;
+	}
+}
+
+#container {
+	margin-top: 2.2em;
+	padding: 0 1em;
+	display: flex;
+	flex-wrap: wrap;
+
+	#channel_container, #log_container {
+		border: 1px solid var(--omnios-colour);
+		margin: .5em .5em;
+		padding: .5em .5em;
+	}
+
+	#channel_container {
+		flex-basis: 15ch;
+		flex-grow: 1;
+		position: fixed;
+		left: 0;
+		top: 2.2em;
+		margin-left: 2em;
+		height: calc(100vh - 4.3em);
+
+		.channel_row {
+			padding: 4px 5px 4px 5px;
+
+			&:hover {
+				background: var(--channel-hover-bg-colour);
+				color: var(--channel-hover-text-colour);
+				cursor: pointer;
+			}
+		}
+
+		.current {
+			color: var(--omnios-colour);
+		}
+	}
+
+	#log_container {
+		margin-left: 10em;
+		flex-basis: 0;
+		flex-grow: 999;
+		min-height: calc(100vh - 4.3em);
+
+		.fail_msg {
+			padding: .75rem 1.25rem;
+			border: 1px solid transparent;
+			border-radius: .25rem;
+			color: #721c24;
+			background-color: #f8d7da;
+			border-color: #f5c6cb;
+		}
+
+		#topic {
+			padding: .75rem 1.25rem;
+			margin-bottom: .5em;
+			border: 1px solid transparent;
+			border-radius: .25rem;
+			color: var(--topic-text-colour);
+			background-color: var(--topic-bg-colour);
+			border-color: var(--topic-border-colour);
+			font-style: italic;
+		}
+
+		#logs {
+			.log_row {
+				display: flex;
+				line-height: 1.4em;
+
+				.ts, .nick, .message {
+					padding: 0 .5em;
+				}
+
+				a.ts_link {
+					color: var(--ts-link-colour);
+					text-decoration: none;
+
+					&:hover {
+						text-decoration: underline;
+					}
+				}
+
+				.nick {
+					min-width: 8em;
+					text-align: right;
+					font-weight: bold;
+				}
+
+				&:hover {
+					background: var(--msg-hover-bg-colour);
+				}
+
+				.message {
+					a {
+						overflow-wrap: break-word;
+						word-wrap: break-word;
+						-ms-word-break: break-all;
+						word-break: break-word;
+						-ms-hyphens: auto;
+						-moz-hyphens: auto;
+						-webkit-hyphens: auto;
+						hyphens: auto;
+						cursor: pointer;
+					}
+				}
+
+				&.hl {
+					background: var(--omnios-colour-pale);
+				}
+
+			}
+		}
+	}
+}
+
+@media only screen and (max-width: 600px) {
+	#menu {
+		width: 95vw;
+		padding: .5em 1em;
+
+		#toggle_sys_info {
+			display: none;
+		}
+	}
+
+	#container {
+		margin-top: 3.5em;
+
+		#channel_container {
+			position: static;
+			height: auto;
+			margin: 1em 0;
+		}
+
+		#log_container {
+			margin: 0;
+			min-height: 0;
+
+			#logs {
+				.log_row {
+					flex-wrap: wrap;
+
+					.ts, .nick {
+						flex-basis: 50%;
+					}
+
+					.message {
+						flex-basis: 100%;
+					}
+
+					.nick {
+						text-align: left;
+					}
+				}
+			}
+		}
+	}
+
+	#toggle_help {
+		display: none;
+	}
+}
+
+@media only screen and (max-width: 360px) {
+	#container {
+		#log-container {
+			#topic {
+				a {
+					overflow-wrap: break-word;
+					word-wrap: break-word;
+					-ms-word-break: break-all;
+					word-break: break-word;
+					-ms-hyphens: auto;
+					-moz-hyphens: auto;
+					-webkit-hyphens: auto;
+					hyphens: auto;
+					cursor: pointer;
+
+				}
+			}
+		}
+	}
+}
+
+[class^="nick_col_"] {
+	font-weight: bold;
+}
+
+.nick_col_ooce {
+	color: var(--omnios-colour);
+}
+
+.nick_col_0 {
+	color: #d72828;
+}
+
+.nick_col_1 {
+	color: #ed1aec;
+}
+
+.nick_col_2 {
+	color: #188181;
+}
+
+.nick_col_3 {
+	color: #969603;
+}
+
+.nick_col_4 {
+	color: #019898;
+}
+
+.nick_col_5 {
+	color: #059405;
+}
+
+.nick_col_6 {
+	color: #5c5ced;
+}
+
+.nick_col_7 {
+	color: #21dede;
+}
+
+.join_col {
+	color: #009200;
+}
+
+.part_col {
+	color: #800000;
+}
+
+.channel_col {
+	color: #f00;
+}

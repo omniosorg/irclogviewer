@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+	<meta charset='UTF-8'>
+	<meta name='viewport' content='width=device-width, initial-scale=1'>
+	<meta name="description"
+	    content="IRC logs for #omnios and other illumos project channels">
+
+	<title>IRC logs</title>
+
+	<link rel='stylesheet' href='/css/style.css' />
+
+	<script src='https://code.jquery.com/jquery-3.6.0.min.js'
+	    integrity='sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4='
+	    crossorigin='anonymous'>
+	</script>
+
+	<script src="https://kit.fontawesome.com/596031c7ad.js"
+	    crossorigin="anonymous">
+	</script>
+
+	<script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js">
+	</script>
+	<script src="https://cdn.jsdelivr.net/npm/pikaday@1.8.2/pikaday.min.js">
+	</script>
+	<script src="https://cdn.jsdelivr.net/npm/pikaday@1.8.2/plugins/pikaday.jquery.js"
+	    integrity="sha256-Msvs+RIuOUjcyMlMwEXek9DS7WaAcAS2JXCr5zloEQk="
+	    crossorigin="anonymous">
+	</script>
+	<link rel="stylesheet" type="text/css"
+	    href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css" />
+</head>
+<body>
+	<header id='menu'>
+		<span id='title'>IRC logs for <span></span></span>
+
+		<div id='datepicker_container'>
+			<i id='date_dec' title='One day earlier'
+			    class='fas fa-caret-left fa-lg'></i>
+
+			<input type='text' id='datepicker'>
+
+			<span id='date_inc' title='One day later'>
+			    <i class='fas fa-caret-right fa-lg'></i>
+			</span>
+		</div>
+
+		<span id='date_today' title='Today'>
+		    <i class='far fa-clock fa-lg'></i>
+		</span>
+
+		<span id='refresh' title='Refresh'>
+		    <i class='fas fa-sync-alt fa-lg'></i>
+		</span>
+
+		<span id='scroll_up' title='Scroll to first message'>
+		    <i class='far fa-arrow-alt-circle-up fa-lg'></i>
+		</span>
+
+		<span id='scroll_down' title='Scroll to last message'>
+		    <i class='far fa-arrow-alt-circle-down fa-lg'></i>
+		</span>
+
+		<span id='toggle_dl' title='Toggle light/dark mode'>
+		    <i id='dl_icon' class='far fa-moon fa-lg'></i>
+		</span>
+
+		<span id='toggle_settings' title='Show settings overlay'>
+		    <i id='dl_icon' class='fas fa-cogs fa-lg'></i>
+		</span>
+
+		<span id='toggle_help' title='Show help overlay'>
+		    <i id='dl_icon' class='far fa-question-circle fa-lg'></i>
+		</span>
+
+		<span id='toggle_sys' class='off'
+		   title='Toggle showing join/part messages'>
+			<i class='fas fa-info-circle fa-lg'></i>
+			<span id='toggle_sys_info'></span>
+		</span>
+	</header>
+
+	<div id='loading_overlay'></div>
+	<div id='loading_container'>
+		<img src='/assets/loading.svg' alt='loading'
+		    class='loading_img'>
+	</div>
+
+	<div id="overlay">
+		<div id="help_overlay">
+			<header>
+				<h3>Keyboard shortcuts</h3>
+				<a id='help_close'>Close</a>
+			</header>
+			<main>
+				<div class='shortcut'>
+					<span class='key'>&lt;left arrow&gt;</span>
+					<span>Previous day</span>
+				</div>
+				<div class='shortcut'>
+					<span class='key'>&lt;right arrow&gt;</span>
+					<span>Next day</span>
+				</div>
+				<div class='shortcut'>
+					<span class='key'>t</span>
+					<span>Go to today</span>
+				</div>
+				<div class='shortcut'>
+					<span class='key'>d</span>
+					<span>Toggle dark mode</span>
+				</div>
+				<div class='shortcut'>
+					<span class='key'>r</span>
+					<span>Refresh</span>
+				</div>
+				<div class='shortcut'>
+					<span class='key'>m</span>
+					<span>Toggle join/part messages</span>
+				</div>
+				<div class='shortcut'>
+					<span class='key'>c</span>
+					<span class='key'>i</span>
+					<span>Go to #illumos</span>
+				</div>
+				<div class='shortcut'>
+					<span class='key'>c</span>
+					<span class='key'>o</span>
+					<span>Go to #omnios</span>
+				</div>
+				<div class='shortcut'>
+					<span class='key'>&lt;home&gt;</span>
+					<span>Scroll to top</span>
+				</div>
+				<div class='shortcut'>
+					<span class='key'>&lt;end&gt;</span>
+					<span>Scroll to bottom</span>
+				</div>
+				<div class='shortcut'>
+					<span class='key'>s</span>
+					<span>Show settings</span>
+				</div>
+				<div class='shortcut'>
+					<span class='key'>?</span>
+					<span>Show this help</span>
+				</div>
+			</main>
+		</div>
+
+		<div id="settings_overlay">
+			<header>
+				<h3>Settings</h3>
+				<a id='settings_close'>Close</a>
+			</header>
+			<main>
+				<div class='setting'>
+					<input type='checkbox' id='utc_setting'>
+						Show UTC times
+					</input>
+				</div>
+			</main>
+		</div>
+	</div>
+
+	<div id='container'>
+		<aside id='channel_container'>
+			<div id='channels'> </div>
+
+			<div id='channel_line' class='hidden channel_row'>
+				<span class='channel'></span>
+			</div>
+		</aside>
+
+		<main id='log_container'>
+			<div id='topic'></div>
+			<div id='logs'></div>
+			<div id='fail_msg' class='hidden fail_msg'></div>
+			<div id='nologs' class='hidden fail_msg'>
+				There are no matching logs for
+				<span></span> on <span></span>.
+			</div>
+
+			<div id='log_line' class='hidden log_row'>
+				<a href='#' class='ts_link'>
+					<span class='ts'></span>
+				</a>
+				<span class='nick'></span>
+				<span class='message'></span>
+			</div>
+			<div id='log_end'></div>
+		</main>
+	</div>
+
+	<script src='/script.js'></script>
+</body>
+</html>
+
