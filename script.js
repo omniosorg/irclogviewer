@@ -8,20 +8,27 @@
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  * You should have received a copy of the GNU General Public License along with
- * this program. If not, see L<http://www.gnu.org/licenses/>.
+ * this program. If not, see http://www.gnu.org/licenses/.
  *
  * Copyright 2021 Matt Fiddaman
  */
 
-const ops = ['andyf', 'hadfl', 'oetiker', 'fenix', 'mrscowley'];
 const defaultchan = 'omnios';
+const nick_col_override = {
+	andyf:		'ooce',
+	hadfl:		'ooce',
+	oetiker:	'ooce',
+	fenix:		'ooce',
+	mrscowley:	'ooce',
+};
 
 // Taken from https://urlregex.com
 const url_regex = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[-+\.\!\/\\\w]*))?)/g;
 
-let channel_regex = /(?<!<[^>]*)#[-\w]+/g;
+let channel_regex = /#[-\w]+/g;
 const escapere = /[.*+?^${}()|[\]\\]/g;
 const actionre = /^\x01ACTION\s+(.*)\x01$/;
+const linkre = /^(.*?)(<a\s.*<\/a>)(.*)$/;
 
 const online = {};
 const nick_classes = {};
@@ -104,11 +111,12 @@ function nickify(text) {
 }
 
 function nick_class(nick) {
-	if (ops.includes(nick)) return 'nick_col_ooce';
+	const _nick = nick.replaceAll(/^_+|_+$/g, '');
 
-	const hash = nick.split('').reduce((t, c) => {
-		return c == '_' ? t : t + c.charCodeAt(0);
-	}, 0);
+	if (_nick in nick_col_override)
+		return `nick_col_${nick_col_override[_nick]}`;
+
+	const hash = _nick.split('').reduce((t, c) => t + c.charCodeAt(0), 0);
 
 	return `nick_col_${hash % 8}`;
 }
@@ -131,9 +139,15 @@ function jp_span(jp, nick) {
 function style_msg() {
 	msg = $(this).html();
 
-	if (msg.includes('://')) msg = linkify(msg);
-	msg = nickify(msg);
-	if (msg.includes('#')) msg = channelify(msg);
+	if (msg.includes('://')) {
+		msg = linkify(msg);
+		let m;
+		if ((m = msg.match(linkre)))
+			msg = nickify(m[1]) + m[2] + nickify(m[3]);
+	} else {
+		msg = nickify(msg);
+		if (msg.includes('#')) msg = channelify(msg);
+	}
 
 	$(this).html(msg);
 }
@@ -152,7 +166,7 @@ function nologs() {
 
 function scroll_hash(hash) {
 	$('div.hl').removeClass('hl');
-	$(hash).addClass('hl');
+	$(hash).addClass('hl').show();
 
 	$('html, body').animate({
 	    scrollTop: $(hash).offset().top - 60
@@ -240,10 +254,12 @@ $(() => {
 			const channel = k;
 
 			const row = $template.clone()
-			    .attr('id', `channel_${channel}`)
+			    .attr('id', `channel_${channel}`);
+
+			row.find('.channel')
+			    .text(`#${channel}`)
 			    .attr('data-channel', channel);
 
-			row.find('.channel').text(`#${channel}`);
 			row.removeClass('hidden');
 
 			$channels.append(row);
@@ -257,11 +273,11 @@ $(() => {
 	const today = format_date(new Date());
 
 	let result;
-	if ((result = path.match(/^\/([a-z]+)\/(\d{4}-\d{2}-\d{2})$/i)) &&
+	if ((result = path.match(/^\/([-a-z]+)\/(\d{4}-\d{2}-\d{2})$/i)) &&
 	    result[1] in channels) {
 		curchan = result[1];
 		curdate = result[2];
-	} else if ((result = path.match(/^\/([a-z]+)/i)) &&
+	} else if ((result = path.match(/^\/([-a-z]+)/i)) &&
 	    result[1] in channels) {
 		window.location.href = `/${result[1]}/${today}`;
 		return;
@@ -275,6 +291,15 @@ $(() => {
 	document.title = `#${curchan} on ${curdate}`;
 	$('#title').find('span').text(`#${curchan}`);
 
+	$('#channels a.channel').each(function () {
+		$(this).attr('href',
+		    `/${$(this).attr('data-channel')}/${curdate}`);
+
+		if ($(this).attr('data-channel') === curchan)
+			$(this).parent('div').addClass('current');
+	});
+
+
 	try {
 		const $topic = $('#topic');
 		$topic.text(channels[curchan].topic);
@@ -284,7 +309,7 @@ $(() => {
 	}
 
 	channel_regex = new RegExp(
-	    `(?<!<[^>]*)#(?:${Object.keys(channels).join('|')})\\b`, 'g');
+	    `#(?:${Object.keys(channels).join('|')})\\b`, 'g');
 
 	pik = new Pikaday({
 		field: $('#datepicker')[0],
@@ -333,7 +358,7 @@ $(() => {
 				const safe_nick = nick.replace(
 				    escapere, '\\$&');
 				nick_regexps[nick] = new
-				    RegExp(`(?<!<[^>]*)\\b${safe_nick}\\b`,
+				    RegExp(`\\b${safe_nick}\\b`,
 				    'g')
 			} catch (err) {
 				fail_msg('Invalid characters found in nickname');
@@ -354,6 +379,8 @@ $(() => {
 			row.find('.ts_link').attr('href', `#${id}`);
 			row.attr('data-cmd', v.command);
 
+			row.find('.nick').attr('data-nick', v.nick);
+
 			if (v.command in handlers) {
 				handlers[v.command](v, row);
 			} else {
@@ -364,6 +391,15 @@ $(() => {
 			row.removeClass('hidden');
 
 			$logs.append(row);
+		});
+
+		$('#logs .log_row .nick').on('click', function () {
+			const nick = $(this).attr('data-nick');
+
+			$(`#logs .log_row .nick[data-nick='${nick}']`)
+			    .parent('div.log_row')
+			    .removeClass('hl')
+			    .toggleClass('hlu');
 		});
 
 		$logs.append($('<span/>').attr('id', 'end'));
@@ -378,6 +414,14 @@ $(() => {
 
 		$('a.ts_link').on('click', function(e) {
 			e.preventDefault();
+
+			if ($(this).parent('.log_row').hasClass('hl')) {
+				$(this).parent('.log_row').removeClass('hl');
+				document.location.hash = '+';
+
+				return;
+			}
+
 			scroll_hash($(this).attr('href'));
 		});
 
@@ -388,16 +432,8 @@ $(() => {
 			scroll_hash(document.location.hash);
 
 	}).fail((err) => {
-		fail_msg(`Error fetching log for #${curchan}/${curdate}`);
 		loader.hide();
-	});
-
-	$(`div.channel_row[data-channel="${curchan}"]`).addClass('current');
-
-	$('div.channel_row').on('click', function() {
-		document.location.href = '/' +
-		    $(this).attr('data-channel') + '/' + curdate;
-		return;
+		nologs();
 	});
 
 	$('#date_today').on('click', () => {
@@ -475,22 +511,6 @@ $(() => {
 				break;
 			case 'm':
 				$('#toggle_sys').trigger('click');
-				break;
-			case 'i':
-			case 'o':
-				if (last_key === undefined) break;
-
-				if (last_key === 'c') {
-					let channel;
-
-					if (e.key === 'i')
-						channel = 'illumos'
-					else if (e.key === 'o')
-						channel = 'omnios'
-
-					window.location.href =
-					    `/${channel}/${curdate}`;
-				}
 				break;
 			case 's':
 				$('#toggle_settings').trigger('click');
