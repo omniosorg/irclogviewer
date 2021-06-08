@@ -19,9 +19,10 @@ const defaultchan = 'omnios';
 // Taken from https://urlregex.com
 const url_regex = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[-+\.\!\/\\\w]*))?)/g;
 
-let channel_regex = /(?<!<[^>]*)#[-\w]+/g;
+let channel_regex = /#[-\w]+/g;
 const escapere = /[.*+?^${}()|[\]\\]/g;
 const actionre = /^\x01ACTION\s+(.*)\x01$/;
+const linkre = /^(.*?)(<a\s.*<\/a>)(.*)$/;
 
 const online = {};
 const nick_classes = {};
@@ -131,9 +132,15 @@ function jp_span(jp, nick) {
 function style_msg() {
 	msg = $(this).html();
 
-	if (msg.includes('://')) msg = linkify(msg);
-	msg = nickify(msg);
-	if (msg.includes('#')) msg = channelify(msg);
+	if (msg.includes('://')) {
+		msg = linkify(msg);
+		let m;
+		if ((m = msg.match(linkre)))
+			msg = nickify(m[1]) + m[2] + nickify(m[3]);
+	} else {
+		msg = nickify(msg);
+		if (msg.includes('#')) msg = channelify(msg);
+	}
 
 	$(this).html(msg);
 }
@@ -284,7 +291,7 @@ $(() => {
 	}
 
 	channel_regex = new RegExp(
-	    `(?<!<[^>]*)#(?:${Object.keys(channels).join('|')})\\b`, 'g');
+	    `#(?:${Object.keys(channels).join('|')})\\b`, 'g');
 
 	pik = new Pikaday({
 		field: $('#datepicker')[0],
@@ -333,7 +340,7 @@ $(() => {
 				const safe_nick = nick.replace(
 				    escapere, '\\$&');
 				nick_regexps[nick] = new
-				    RegExp(`(?<!<[^>]*)\\b${safe_nick}\\b`,
+				    RegExp(`\\b${safe_nick}\\b`,
 				    'g')
 			} catch (err) {
 				fail_msg('Invalid characters found in nickname');
