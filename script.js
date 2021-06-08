@@ -159,7 +159,7 @@ function nologs() {
 
 function scroll_hash(hash) {
 	$('div.hl').removeClass('hl');
-	$(hash).addClass('hl');
+	$(hash).addClass('hl').show();
 
 	$('html, body').animate({
 	    scrollTop: $(hash).offset().top - 60
