@@ -414,6 +414,14 @@ $(() => {
 
 		$('a.ts_link').on('click', function(e) {
 			e.preventDefault();
+
+			if ($(this).parent('.log_row').hasClass('hl')) {
+				$(this).parent('.log_row').removeClass('hl');
+				document.location.hash = '+';
+
+				return;
+			}
+
 			scroll_hash($(this).attr('href'));
 		});
 
