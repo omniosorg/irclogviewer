@@ -271,11 +271,11 @@ $(() => {
 	const today = format_date(new Date());
 
 	let result;
-	if ((result = path.match(/^\/([a-z]+)\/(\d{4}-\d{2}-\d{2})$/i)) &&
+	if ((result = path.match(/^\/([-a-z]+)\/(\d{4}-\d{2}-\d{2})$/i)) &&
 	    result[1] in channels) {
 		curchan = result[1];
 		curdate = result[2];
-	} else if ((result = path.match(/^\/([a-z]+)/i)) &&
+	} else if ((result = path.match(/^\/([-a-z]+)/i)) &&
 	    result[1] in channels) {
 		window.location.href = `/${result[1]}/${today}`;
 		return;
