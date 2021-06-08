@@ -56,6 +56,11 @@ body {
 
 a {
 	color: var(--omnios-colour);
+	text-decoration: none;
+
+	&:hover {
+		text-decoration: underline;
+	}
 }
 
 .hidden {
