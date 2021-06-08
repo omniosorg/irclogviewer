@@ -512,22 +512,6 @@ $(() => {
 			case 'm':
 				$('#toggle_sys').trigger('click');
 				break;
-			case 'i':
-			case 'o':
-				if (last_key === undefined) break;
-
-				if (last_key === 'c') {
-					let channel;
-
-					if (e.key === 'i')
-						channel = 'illumos'
-					else if (e.key === 'o')
-						channel = 'omnios'
-
-					window.location.href =
-					    `/${channel}/${curdate}`;
-				}
-				break;
 			case 's':
 				$('#toggle_settings').trigger('click');
 				break;
