@@ -13,8 +13,14 @@
  * Copyright 2021 Matt Fiddaman
  */
 
-const ops = ['andyf', 'hadfl', 'oetiker', 'fenix', 'mrscowley'];
 const defaultchan = 'omnios';
+const nick_col_override = {
+	andyf:		'ooce',
+	hadfl:		'ooce',
+	oetiker:	'ooce',
+	fenix:		'ooce',
+	mrscowley:	'ooce',
+};
 
 // Taken from https://urlregex.com
 const url_regex = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[-+\.\!\/\\\w]*))?)/g;
@@ -105,11 +111,12 @@ function nickify(text) {
 }
 
 function nick_class(nick) {
-	if (ops.includes(nick)) return 'nick_col_ooce';
+	const _nick = nick.replaceAll(/^_+|_+$/g, '');
 
-	const hash = nick.split('').reduce((t, c) => {
-		return c == '_' ? t : t + c.charCodeAt(0);
-	}, 0);
+	if (_nick in nick_col_override)
+		return `nick_col_${nick_col_override[_nick]}`;
+
+	const hash = _nick.split('').reduce((t, c) => t + c.charCodeAt(0), 0);
 
 	return `nick_col_${hash % 8}`;
 }
