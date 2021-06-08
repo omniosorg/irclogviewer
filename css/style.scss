@@ -15,8 +15,6 @@ html {
 	--disabled-colour: #ccc;
 	--border-colour: var(--omnios-colour);
 	--status-colour: #ff4500;
-	--channel-hover-bg-colour: #666;
-	--channel-hover-text-colour: white;
 	--topic-bg-colour: #eee;
 	--topic-text-colour: black;
 	--topic-border-colour: #ccc;
@@ -35,8 +33,6 @@ html:not(.style-scope)[dark] {
 	--text-colour: #c0c0c0;
 	--icon-colour: #c0c0c0;
 	--disabled-colour: #606060;
-	--channel-hover-bg-colour: #364554;
-	--channel-hover-text-colour: #c0c0c0;
 	--ts-link-colour: #c0c0c0;
 	--msg-hover-bg-colour: #364554;
 	--topic-bg-colour: #2e3944;
@@ -235,15 +231,18 @@ a {
 		.channel_row {
 			padding: 4px 5px 4px 5px;
 
+			a {
+				color: var(--text-colour);
+			}
+
+			&.current a {
+				color: var(--omnios-colour);
+			}
+
 			&:hover {
-				background: var(--channel-hover-bg-colour);
-				color: var(--channel-hover-text-colour);
+				background: var(--msg-hover-bg-colour);
 				cursor: pointer;
 			}
-		}
-
-		.current {
-			color: var(--omnios-colour);
 		}
 	}
 

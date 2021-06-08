@@ -254,10 +254,12 @@ $(() => {
 			const channel = k;
 
 			const row = $template.clone()
-			    .attr('id', `channel_${channel}`)
+			    .attr('id', `channel_${channel}`);
+
+			row.find('.channel')
+			    .text(`#${channel}`)
 			    .attr('data-channel', channel);
 
-			row.find('.channel').text(`#${channel}`);
 			row.removeClass('hidden');
 
 			$channels.append(row);
@@ -288,6 +290,15 @@ $(() => {
 
 	document.title = `#${curchan} on ${curdate}`;
 	$('#title').find('span').text(`#${curchan}`);
+
+	$('#channels a.channel').each(function () {
+		$(this).attr('href',
+		    `/${$(this).attr('data-channel')}/${curdate}`);
+
+		if ($(this).attr('data-channel') === curchan)
+			$(this).parent('div').addClass('current');
+	});
+
 
 	try {
 		const $topic = $('#topic');
@@ -404,14 +415,6 @@ $(() => {
 	}).fail((err) => {
 		loader.hide();
 		nologs();
-	});
-
-	$(`div.channel_row[data-channel="${curchan}"]`).addClass('current');
-
-	$('div.channel_row').on('click', function() {
-		document.location.href = '/' +
-		    $(this).attr('data-channel') + '/' + curdate;
-		return;
 	});
 
 	$('#date_today').on('click', () => {
