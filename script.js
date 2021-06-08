@@ -116,9 +116,14 @@ function nick_class(nick) {
 	if (_nick in nick_col_override)
 		return `nick_col_${nick_col_override[_nick]}`;
 
-	const hash = _nick.split('').reduce((t, c) => t + c.charCodeAt(0), 0);
+	let hash = 0;
+	for (let i = 0; i < _nick.length; i++) {
+		const char = _nick.charCodeAt(i);
+		hash = ((hash << 5) - hash) + char;
+		hash = hash & hash; // Truncate to 32-bits
+	}
 
-	return `nick_col_${hash % 8}`;
+	return `nick_col_${Math.abs(hash % 8)}`;
 }
 
 function nick_span(nick, braces=true) {
