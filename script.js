@@ -379,6 +379,8 @@ $(() => {
 			row.find('.ts_link').attr('href', `#${id}`);
 			row.attr('data-cmd', v.command);
 
+			row.find('.nick').attr('data-nick', v.nick);
+
 			if (v.command in handlers) {
 				handlers[v.command](v, row);
 			} else {
@@ -389,6 +391,15 @@ $(() => {
 			row.removeClass('hidden');
 
 			$logs.append(row);
+		});
+
+		$('#logs .log_row .nick').on('click', function () {
+			const nick = $(this).attr('data-nick');
+
+			$(`#logs .log_row .nick[data-nick='${nick}']`)
+			    .parent('div.log_row')
+			    .removeClass('hl')
+			    .toggleClass('hlu');
 		});
 
 		$logs.append($('<span/>').attr('id', 'end'));

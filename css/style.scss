@@ -294,6 +294,7 @@ a {
 					min-width: 8em;
 					text-align: right;
 					font-weight: bold;
+					cursor: pointer;
 				}
 
 				&:hover {
@@ -314,10 +315,9 @@ a {
 					}
 				}
 
-				&.hl {
+				&.hl, &.hlu {
 					background: var(--omnios-colour-pale);
 				}
-
 			}
 		}
 	}
