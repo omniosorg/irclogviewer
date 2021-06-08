@@ -395,8 +395,8 @@ $(() => {
 			scroll_hash(document.location.hash);
 
 	}).fail((err) => {
-		fail_msg(`Error fetching log for #${curchan}/${curdate}`);
 		loader.hide();
+		nologs();
 	});
 
 	$(`div.channel_row[data-channel="${curchan}"]`).addClass('current');
