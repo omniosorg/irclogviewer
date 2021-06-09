@@ -187,6 +187,26 @@ function scroll_hash(hash) {
 	document.location.hash = hash;
 }
 
+function switch_channel(pn) {
+	const $current = $('#channels .channel_row.current');
+	let $destination;
+
+	if (pn) {
+		$destination = $current.next();
+
+		if($destination.length === 0)
+			$destination = $('#channels .channel_row:first');
+	} else {
+		$destination = $current.prev();
+
+		if($destination.length === 0)
+			$destination = $('#channels .channel_row:last');
+	}
+
+	document.location.href =
+	    `/${$destination.find('a').attr('data-channel')}/${curdate}`;
+}
+
 const handlers = {
 	'JOIN': (v, r) => {
 		r.find('.message').append(jp_span(true, v.nick));
@@ -498,9 +518,18 @@ $(() => {
 		if (e.altKey || e.ctrlKey || e.metaKey) return;
 
 		if (e.shiftKey) {
-			if (e.key == '?')
-				$('#toggle_help').trigger('click');
-			return;
+			switch (e.key) {
+				case '?':
+					$('#toggle_help').trigger('click');
+					break;
+				case '<':
+					switch_channel(false);
+					break;
+				case '>':
+					switch_channel(true);
+					break;
+				default: return;
+			}
 		}
 
 		switch(e.key) {
