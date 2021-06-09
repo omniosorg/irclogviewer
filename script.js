@@ -90,8 +90,16 @@ function initialise_settings() {
 
 function linkify(text) {
 	return text.replaceAll(url_regex, (url) => {
+		let href = url.replace(/\.$/, '');
+
+		if (!url.includes('('))
+			href = href.replace(/\)$/, '');
+
+		const lhref = href.length;
+
 		return '<a target="_blank" rel="noopener" href="'
-		    + url + '">' + url + '</a>';
+		    + href + '">' + url.slice(0, lhref) + '</a>'
+		    + url.slice(lhref);
 	})
 }
 
