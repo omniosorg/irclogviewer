@@ -23,6 +23,7 @@ html {
 	--datepicker-border-colour: #ccc;
 	--ts-link-colour: black;
 	--msg-hover-bg-colour: #eee;
+	--chan-hover-bg-colour: #eee;
 	--icon-colour: black;
 	--menu-bg-colour: white;
 	--shortcut-key-colour: #ddd;
@@ -35,6 +36,7 @@ html:not(.style-scope)[dark] {
 	--disabled-colour: #606060;
 	--ts-link-colour: #c0c0c0;
 	--msg-hover-bg-colour: #364554;
+	--chan-hover-bg-colour: #364554;
 	--topic-bg-colour: #2e3944;
 	--topic-text-colour: #c0c0c0;
 	--datepicker-bg-colour: #364554;
@@ -228,16 +230,18 @@ a {
 		margin-left: 2em;
 		height: calc(100vh - 4.3em);
 
-		.channel_row {
-			padding: 4px 5px 4px 5px;
+		#channels {
+			& > * {
+				a {
+					display: block;
+					padding: 5px 4px;
+					width: 95%;
+					color: var(--text-colour);
 
-			a {
-				color: var(--text-colour);
-			}
-
-			&.current a {
-				color: var(--omnios-colour);
-			}
+					&:hover {
+						background: var(--chan-hover-bg-colour);
+					}
+				}
 
 			&:hover {
 				background: var(--msg-hover-bg-colour);

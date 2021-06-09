@@ -188,19 +188,19 @@ function scroll_hash(hash) {
 }
 
 function switch_channel(pn) {
-	const $current = $('#channels .channel_row.current');
+	const $current = $('#channels .current');
 	let $destination;
 
 	if (pn) {
 		$destination = $current.next();
 
 		if($destination.length === 0)
-			$destination = $('#channels .channel_row:first');
+			$destination = $('#channels div:first');
 	} else {
 		$destination = $current.prev();
 
 		if($destination.length === 0)
-			$destination = $('#channels .channel_row:last');
+			$destination = $('#channels div:last');
 	}
 
 	document.location.href =
