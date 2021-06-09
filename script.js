@@ -210,6 +210,9 @@ const handlers = {
 };
 
 $(() => {
+	if('serviceWorker' in navigator)
+		navigator.serviceWorker.register('/sw.js')
+
 	const path = document.location.pathname;
 
 	$('#toggle_sys').on('click', function(e) {

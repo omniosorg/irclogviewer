@@ -1,0 +1,17 @@
+{
+	"name": "IRC Log Viewer",
+	"short_name": "IRCLog",
+	"start_url": "/index.html",
+	"display": "standalone",
+	"background_color": "#ff9800",
+	"theme_color": "#ff9800",
+	"orientation": "portrait-primary",
+	"icons": [
+		{
+			"src": "/assets/maskable-logo.png",
+			"type": "image/png",
+			"sizes": "512x512",
+			"purpose": "any maskable"
+		}
+	]
+}
