@@ -255,6 +255,11 @@ a {
 					}
 				}
 			}
+
+			div.sel {
+				border: solid 2px var(--omnios-colour);
+				background: var(--chan-hover-bg-colour);
+			}
 		}
 	}
 

@@ -40,6 +40,7 @@ let channels = {};
 let curchan, curdate;
 let pik;
 let lastkey;
+let chansel = false;
 
 const zero_pad = (num, places) => String(num).padStart(places, '0')
 
@@ -213,7 +214,7 @@ function switch_channel(pn) {
 	}
 
 	document.location.href =
-	    `/${$destination.find('a').attr('data-channel')}/${curdate}`;
+	    `/${$destination.attr('data-channel')}/${curdate}`;
 }
 
 const handlers = {
@@ -299,11 +300,11 @@ $(() => {
 			const channel = k;
 
 			const row = $template.clone()
-			    .attr('id', `channel_${channel}`);
+			    .removeAttr('id')
+			    .attr('data-channel', channel);
 
 			row.find('.channel')
-			    .text(`#${channel}`)
-			    .attr('data-channel', channel);
+			    .text(`#${channel}`);
 
 			row.removeClass('hidden');
 
@@ -336,12 +337,12 @@ $(() => {
 	document.title = `#${curchan} on ${curdate}`;
 	$('#title').find('span').text(`#${curchan}`);
 
-	$('#channels a.channel').each(function () {
-		$(this).attr('href',
+	$('#channels > div').each(function() {
+		$(this).find('a').attr('href',
 		    `/${$(this).attr('data-channel')}/${curdate}`);
 
 		if ($(this).attr('data-channel') === curchan)
-			$(this).parent('div').addClass('current');
+			$(this).addClass('current');
 	});
 
 	try {
@@ -531,54 +532,112 @@ $(() => {
 		$('#overlay, #settings_overlay').toggle();
 	});
 
-	window.onkeydown = (e) => {
-		if (e.altKey || e.ctrlKey || e.metaKey) return;
+	const chansel_keys = (e) => {
+		const $cur = $('#channels div.sel:first');
+		let $next;
 
-		if (e.shiftKey) {
-			switch (e.key) {
-				case '?':
-					$('#toggle_help').trigger('click');
-					break;
-				case '<':
-					switch_channel(false);
-					break;
-				case '>':
-					switch_channel(true);
-					break;
-				default: return;
-			}
-		}
+		if (e.shiftKey)
+			return;
+
+		e.preventDefault();
 
 		switch(e.key) {
-			case 'Escape':
+		    case 'c':
+		    case 'Down':
+		    case 'ArrowDown':
+			$next = $cur.next();
+			if (!$next.length)
+				$next = $('#channels div:first');
+			$cur.removeClass('sel');
+			$next.addClass('sel');
+			break;
+		    case 'Up':
+		    case 'ArrowUp':
+			$next = $cur.prev();
+			if (!$next.length)
+				$next = $('#channels div:last');
+			$cur.removeClass('sel');
+			$next.addClass('sel');
+			break;
+		    case ' ':
+		    case 'Enter':
+			document.location.href =
+			    $cur.find('a').attr('href');
+			break;
+		    case 'Escape':
+			$cur.removeClass('sel');
+			chansel = false;
+			break;
+		    default:
+			$next = $cur
+			    .next(`div[data-channel^="${e.key}"]`);
+			if (!$next.length)
+				$next = $(`div[data-channel^="${e.key}"]`)
+				    .first();
+			if ($next.length) {
+				$cur.removeClass('sel');
+				$next.addClass('sel');
+			}
+			break;
+		}
+	};
+
+	window.onkeydown = (e) => {
+		if (e.altKey || e.ctrlKey || e.metaKey)
+			return;
+
+		if (chansel)
+			return chansel_keys(e);
+
+		switch (e.key) {
+		    case '?':
+			$('#toggle_help').trigger('click');
+			break;
+		    case '<':
+			switch_channel(false);
+			break;
+		    case '>':
+			switch_channel(true);
+			break;
+		    default:
+			if (e.shiftKey)
+				return;
+
+			switch(e.key) {
+			    case 'Escape':
 				$('#overlay > * > header:visible')
 				    .trigger('click');
 				break;
-			case 'Left':
-			case 'ArrowLeft':
+			    case 'Left':
+			    case 'ArrowLeft':
 				$('#date_dec').trigger('click');
 				break;
-			case 'Right':
-			case 'ArrowRight':
+			    case 'Right':
+			    case 'ArrowRight':
 				$('#date_inc').trigger('click');
 				break;
-			case 't':
+			    case 't':
 				$('#date_today').trigger('click');
 				break;
-			case 'd':
+			    case 'd':
 				$('#toggle_dl').trigger('click');
 				break;
-			case 'r':
+			    case 'r':
 				$('#refresh').trigger('click');
 				break;
-			case 'm':
+			    case 'm':
 				$('#toggle_sys').trigger('click');
 				break;
-			case 's':
+			    case 's':
 				$('#toggle_settings').trigger('click');
 				break;
-			case 'c': break;
-			default: return;
+			    case 'c':
+				$('#channels div.current').addClass('sel');
+				chansel = true;
+				break;
+			    default:
+				return;
+			}
 		}
 
 		last_key = e.key;
