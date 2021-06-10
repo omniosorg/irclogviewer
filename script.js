@@ -180,14 +180,17 @@ function nologs() {
 	}
 }
 
-function scroll_hash(hash) {
+function scroll_hash(hash, hl = true) {
 	$('div.hl').removeClass('hl');
-	$(hash).addClass('hl').show();
+
+	if (hl) {
+		$(hash).addClass('hl').show();
+		document.location.hash = hash;
+	}
 
 	$('html, body').animate({
 	    scrollTop: $(hash).offset().top - 60
 	}, 500);
-	document.location.hash = hash;
 }
 
 function switch_channel(pn) {
@@ -464,8 +467,22 @@ $(() => {
 
 		loader.hide();
 
-		if (document.location.hash)
+		if (document.location.hash && document.location.hash !== '#+')
 			scroll_hash(document.location.hash);
+		else if (curdate == today) {
+			const last = localStorage.getItem(`${curchan}-last`);
+			const nlast =
+			    $('#logs .log_row:visible:last')
+			    .attr('id');
+
+			if (last !== "undefined" && last !== null) {
+				if (last != nlast)
+					$(`#${last}`).after('<hr/>');
+				scroll_hash(`#${last}`, false);
+			}
+
+			localStorage.setItem(`${curchan}-last`, nlast);
+		}
 
 	}).fail((err) => {
 		loader.hide();
@@ -498,8 +515,6 @@ $(() => {
 	});
 
 	$('#refresh').on('click', () => {
-		window.location.href = path +
-		    $('a.ts_link:visible:last').attr('href');
 		window.location.reload(false);
 	});
 

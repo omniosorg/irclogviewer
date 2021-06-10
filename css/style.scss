@@ -334,6 +334,12 @@ a {
 					background: var(--omnios-colour-pale);
 				}
 			}
+
+			hr {
+				border: none;
+				height: 1px;
+				background: var(--omnios-colour);
+			}
 		}
 	}
 }
