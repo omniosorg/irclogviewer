@@ -42,11 +42,14 @@ const zero_pad = (num, places) => String(num).padStart(places, '0')
 
 const loader = {
 	show : () => {
-		$('#container, #menu').hide();
 		$('#loading_overlay, #loading_container').show();
+		$('#container, #menu').hide();
+
 	},
 	hide : () => {
 		$('#container, #menu').show();
+		$('#title span').width($('#channels').width());
+		nologs();
 		$('#loading_overlay, #loading_container').fadeOut();
 	}
 }
@@ -335,7 +338,6 @@ $(() => {
 			$(this).parent('div').addClass('current');
 	});
 
-
 	try {
 		const $topic = $('#topic');
 		$topic.text(channels[curchan].topic);
@@ -434,7 +436,6 @@ $(() => {
 
 			$(`#logs .log_row .nick[data-nick='${nick}']`)
 			    .parent('div.log_row')
-			    .removeClass('hl')
 			    .toggleClass('hlu');
 		});
 
@@ -462,14 +463,12 @@ $(() => {
 		});
 
 		loader.hide();
-		nologs();
 
 		if (document.location.hash)
 			scroll_hash(document.location.hash);
 
 	}).fail((err) => {
 		loader.hide();
-		nologs();
 	});
 
 	$('#date_today').on('click', () => {

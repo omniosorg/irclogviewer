@@ -12,21 +12,21 @@ html {
 	--bg-colour: white;
 	--text-colour: black;
 	--loading-overlay-bg: rgba(26, 26, 26, 0.7);
+	--icon-colour: black;
 	--disabled-colour: #ccc;
-	--border-colour: var(--omnios-colour);
-	--status-colour: #ff4500;
-	--topic-bg-colour: #eee;
-	--topic-text-colour: black;
-	--topic-border-colour: #ccc;
 	--datepicker-bg-colour: #eee;
 	--datepicker-text-colour: black;
 	--datepicker-border-colour: #ccc;
-	--ts-link-colour: black;
-	--msg-hover-bg-colour: #eee;
-	--chan-hover-bg-colour: #eee;
-	--icon-colour: black;
+	--status-colour: #ff4500;
 	--menu-bg-colour: white;
 	--shortcut-key-colour: #ddd;
+	--border-colour: var(--omnios-colour);
+	--chan-hover-bg-colour: #eee;
+	--topic-bg-colour: #eee;
+	--topic-text-colour: black;
+	--topic-border-colour: #ccc;
+	--ts-link-colour: black;
+	--msg-hover-bg-colour: #eee;
 }
 
 html:not(.style-scope)[dark] {
@@ -34,16 +34,16 @@ html:not(.style-scope)[dark] {
 	--text-colour: #c0c0c0;
 	--icon-colour: #c0c0c0;
 	--disabled-colour: #606060;
-	--ts-link-colour: #c0c0c0;
-	--msg-hover-bg-colour: #364554;
-	--chan-hover-bg-colour: #364554;
-	--topic-bg-colour: #2e3944;
-	--topic-text-colour: #c0c0c0;
 	--datepicker-bg-colour: #364554;
 	--datepicker-text-colour: #c0c0c0;
 	--datepicker-border-colour: #999;
 	--menu-bg-colour: #2e3944;
 	--shortcut-key-colour: #364554;
+	--chan-hover-bg-colour: #364554;
+	--topic-bg-colour: #2e3944;
+	--topic-text-colour: #c0c0c0;
+	--ts-link-colour: #c0c0c0;
+	--msg-hover-bg-colour: #364554;
 }
 
 body {
@@ -158,6 +158,10 @@ a {
 	#title {
 		color: var(--omnios-colour);
 		padding-right: 1em;
+
+		span {
+			display: inline-block;
+		}
 	}
 
 	.fa, .fas, .far {
@@ -243,9 +247,11 @@ a {
 					}
 				}
 
-			&:hover {
-				background: var(--msg-hover-bg-colour);
-				cursor: pointer;
+				&.current {
+					a {
+						color: var(--omnios-colour);
+					}
+				}
 			}
 		}
 	}
@@ -274,6 +280,17 @@ a {
 			background-color: var(--topic-bg-colour);
 			border-color: var(--topic-border-colour);
 			font-style: italic;
+
+			a {
+				overflow-wrap: break-word;
+				word-wrap: break-word;
+				-ms-word-break: break-all;
+				word-break: break-word;
+				-ms-hyphens: manual;
+				-moz-hyphens: manual;
+				-webkit-hyphens: manual;
+				hyphens: manual;
+			}
 		}
 
 		#logs {
@@ -287,11 +304,6 @@ a {
 
 				a.ts_link {
 					color: var(--ts-link-colour);
-					text-decoration: none;
-
-					&:hover {
-						text-decoration: underline;
-					}
 				}
 
 				.nick {
@@ -311,11 +323,10 @@ a {
 						word-wrap: break-word;
 						-ms-word-break: break-all;
 						word-break: break-word;
-						-ms-hyphens: auto;
-						-moz-hyphens: auto;
-						-webkit-hyphens: auto;
-						hyphens: auto;
-						cursor: pointer;
+						-ms-hyphens: manual;
+						-moz-hyphens: manual;
+						-webkit-hyphens: manual;
+						hyphens: manual;
 					}
 				}
 
@@ -327,10 +338,16 @@ a {
 	}
 }
 
-@media only screen and (max-width: 600px) {
+@media only screen and (max-width: 750px) {
 	#menu {
 		width: 95vw;
 		padding: .5em 1em;
+
+		#title {
+			span {
+				display: inline;
+			}
+		}
 
 		#toggle_sys_info {
 			display: none;
@@ -339,6 +356,7 @@ a {
 
 	#container {
 		margin-top: 3.5em;
+		flex-direction: column;
 
 		#channel_container {
 			position: static;
@@ -348,7 +366,7 @@ a {
 
 		#log_container {
 			margin: 0;
-			min-height: 0;
+			min-height: auto;
 
 			#logs {
 				.log_row {
@@ -372,27 +390,6 @@ a {
 
 	#toggle_help {
 		display: none;
-	}
-}
-
-@media only screen and (max-width: 360px) {
-	#container {
-		#log-container {
-			#topic {
-				a {
-					overflow-wrap: break-word;
-					word-wrap: break-word;
-					-ms-word-break: break-all;
-					word-break: break-word;
-					-ms-hyphens: auto;
-					-moz-hyphens: auto;
-					-webkit-hyphens: auto;
-					hyphens: auto;
-					cursor: pointer;
-
-				}
-			}
-		}
 	}
 }
 
