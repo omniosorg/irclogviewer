@@ -60,9 +60,9 @@ const loader = {
 
 function format_date(d) {
 	return String(
-	    zero_pad(d.getFullYear(), 4) + '-' +
-	    zero_pad(d.getMonth() + 1, 2) + '-' +
-	    zero_pad(d.getDate(), 2));
+	    zero_pad(d.getUTCFullYear(), 4) + '-' +
+	    zero_pad(d.getUTCMonth() + 1, 2) + '-' +
+	    zero_pad(d.getUTCDate(), 2));
 }
 
 function format_time(d) {
