@@ -18,8 +18,11 @@ const nick_col_override = {
 	andyf:		'ooce',
 	hadfl:		'ooce',
 	oetiker:	'ooce',
-	fenix:		'ooce',
-	mrscowley:	'ooce',
+	mattfidd:	'ooce',
+	fenix:		'bot',
+	mrscowley:	'bot',
+	gitomat:	'bot',
+	bot:		'bot',
 };
 
 // Taken from https://urlregex.com
@@ -134,7 +137,7 @@ function nick_class(nick) {
 		hash = hash & hash; // Truncate to 32-bits
 	}
 
-	return `nick_col_${Math.abs(hash % 8)}`;
+	return `nick_col_${Math.abs(hash % 15)}`;
 }
 
 function nick_span(nick, braces=true) {
