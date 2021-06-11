@@ -22,7 +22,7 @@ const nick_col_override = {
 	fenix:		'bot',
 	mrscowley:	'bot',
 	gitomat:	'bot',
-	bot:		'bot',
+	jinni:		'bot',
 };
 
 // Taken from https://urlregex.com
