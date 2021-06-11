@@ -18,8 +18,11 @@ const nick_col_override = {
 	andyf:		'ooce',
 	hadfl:		'ooce',
 	oetiker:	'ooce',
-	fenix:		'ooce',
-	mrscowley:	'ooce',
+	mattfidd:	'ooce',
+	fenix:		'bot',
+	mrscowley:	'bot',
+	gitomat:	'bot',
+	bot:		'bot',
 };
 
 // Taken from https://urlregex.com
@@ -37,25 +40,29 @@ let channels = {};
 let curchan, curdate;
 let pik;
 let lastkey;
+let chansel = false;
 
 const zero_pad = (num, places) => String(num).padStart(places, '0')
 
 const loader = {
 	show : () => {
-		$('#container, #menu').hide();
 		$('#loading_overlay, #loading_container').show();
+		$('#container, #menu').hide();
+
 	},
 	hide : () => {
 		$('#container, #menu').show();
+		$('#title span').width($('#channels').width());
+		nologs();
 		$('#loading_overlay, #loading_container').fadeOut();
 	}
 }
 
 function format_date(d) {
 	return String(
-	    zero_pad(d.getFullYear(), 4) + '-' +
-	    zero_pad(d.getMonth() + 1, 2) + '-' +
-	    zero_pad(d.getDate(), 2));
+	    zero_pad(d.getUTCFullYear(), 4) + '-' +
+	    zero_pad(d.getUTCMonth() + 1, 2) + '-' +
+	    zero_pad(d.getUTCDate(), 2));
 }
 
 function format_time(d) {
@@ -90,8 +97,16 @@ function initialise_settings() {
 
 function linkify(text) {
 	return text.replaceAll(url_regex, (url) => {
+		let href = url.replace(/\.$/, '');
+
+		if (!url.includes('('))
+			href = href.replace(/\)$/, '');
+
+		const lhref = href.length;
+
 		return '<a target="_blank" rel="noopener" href="'
-		    + url + '">' + url + '</a>';
+		    + href + '">' + url.slice(0, lhref) + '</a>'
+		    + url.slice(lhref);
 	})
 }
 
@@ -116,9 +131,14 @@ function nick_class(nick) {
 	if (_nick in nick_col_override)
 		return `nick_col_${nick_col_override[_nick]}`;
 
-	const hash = _nick.split('').reduce((t, c) => t + c.charCodeAt(0), 0);
+	let hash = 0;
+	for (let i = 0; i < _nick.length; i++) {
+		const char = _nick.charCodeAt(i);
+		hash = ((hash << 5) - hash) + char;
+		hash = hash & hash; // Truncate to 32-bits
+	}
 
-	return `nick_col_${hash % 8}`;
+	return `nick_col_${Math.abs(hash % 15)}`;
 }
 
 function nick_span(nick, braces=true) {
@@ -164,14 +184,37 @@ function nologs() {
 	}
 }
 
-function scroll_hash(hash) {
+function scroll_hash(hash, hl = true) {
 	$('div.hl').removeClass('hl');
-	$(hash).addClass('hl').show();
+
+	if (hl) {
+		$(hash).addClass('hl').show();
+		document.location.hash = hash;
+	}
 
 	$('html, body').animate({
 	    scrollTop: $(hash).offset().top - 60
 	}, 500);
-	document.location.hash = hash;
+}
+
+function switch_channel(pn) {
+	const $current = $('#channels .current');
+	let $destination;
+
+	if (pn) {
+		$destination = $current.next();
+
+		if($destination.length === 0)
+			$destination = $('#channels div:first');
+	} else {
+		$destination = $current.prev();
+
+		if($destination.length === 0)
+			$destination = $('#channels div:last');
+	}
+
+	document.location.href =
+	    `/${$destination.attr('data-channel')}/${curdate}`;
 }
 
 const handlers = {
@@ -197,6 +240,9 @@ const handlers = {
 };
 
 $(() => {
+	if('serviceWorker' in navigator)
+		navigator.serviceWorker.register('/sw.js')
+
 	const path = document.location.pathname;
 
 	$('#toggle_sys').on('click', function(e) {
@@ -254,11 +300,11 @@ $(() => {
 			const channel = k;
 
 			const row = $template.clone()
-			    .attr('id', `channel_${channel}`);
+			    .removeAttr('id')
+			    .attr('data-channel', channel);
 
 			row.find('.channel')
-			    .text(`#${channel}`)
-			    .attr('data-channel', channel);
+			    .text(`#${channel}`);
 
 			row.removeClass('hidden');
 
@@ -291,14 +337,13 @@ $(() => {
 	document.title = `#${curchan} on ${curdate}`;
 	$('#title').find('span').text(`#${curchan}`);
 
-	$('#channels a.channel').each(function () {
-		$(this).attr('href',
+	$('#channels > div').each(function() {
+		$(this).find('a').attr('href',
 		    `/${$(this).attr('data-channel')}/${curdate}`);
 
 		if ($(this).attr('data-channel') === curchan)
-			$(this).parent('div').addClass('current');
+			$(this).addClass('current');
 	});
-
 
 	try {
 		const $topic = $('#topic');
@@ -398,7 +443,6 @@ $(() => {
 
 			$(`#logs .log_row .nick[data-nick='${nick}']`)
 			    .parent('div.log_row')
-			    .removeClass('hl')
 			    .toggleClass('hlu');
 		});
 
@@ -426,14 +470,26 @@ $(() => {
 		});
 
 		loader.hide();
-		nologs();
 
-		if (document.location.hash)
+		if (document.location.hash && document.location.hash !== '#+')
 			scroll_hash(document.location.hash);
+		else if (curdate == today) {
+			const last = localStorage.getItem(`${curchan}-last`);
+			const nlast =
+			    $('#logs .log_row:visible:last')
+			    .attr('id');
+
+			if (last !== "undefined" && last !== null) {
+				if (last != nlast)
+					$(`#${last}`).after('<hr/>');
+				scroll_hash(`#${last}`, false);
+			}
+
+			localStorage.setItem(`${curchan}-last`, nlast);
+		}
 
 	}).fail((err) => {
 		loader.hide();
-		nologs();
 	});
 
 	$('#date_today').on('click', () => {
@@ -463,8 +519,6 @@ $(() => {
 	});
 
 	$('#refresh').on('click', () => {
-		window.location.href = path +
-		    $('a.ts_link:visible:last').attr('href');
 		window.location.reload(false);
 	});
 
@@ -478,45 +532,112 @@ $(() => {
 		$('#overlay, #settings_overlay').toggle();
 	});
 
-	window.onkeydown = (e) => {
-		if (e.altKey || e.ctrlKey || e.metaKey) return;
+	const chansel_keys = (e) => {
+		const $cur = $('#channels div.sel:first');
+		let $next;
 
-		if (e.shiftKey) {
-			if (e.key == '?')
-				$('#toggle_help').trigger('click');
+		if (e.shiftKey)
 			return;
-		}
+
+		e.preventDefault();
 
 		switch(e.key) {
-			case 'Escape':
+		    case 'c':
+		    case 'Down':
+		    case 'ArrowDown':
+			$next = $cur.next();
+			if (!$next.length)
+				$next = $('#channels div:first');
+			$cur.removeClass('sel');
+			$next.addClass('sel');
+			break;
+		    case 'Up':
+		    case 'ArrowUp':
+			$next = $cur.prev();
+			if (!$next.length)
+				$next = $('#channels div:last');
+			$cur.removeClass('sel');
+			$next.addClass('sel');
+			break;
+		    case ' ':
+		    case 'Enter':
+			document.location.href =
+			    $cur.find('a').attr('href');
+			break;
+		    case 'Escape':
+			$cur.removeClass('sel');
+			chansel = false;
+			break;
+		    default:
+			$next = $cur
+			    .next(`div[data-channel^="${e.key}"]`);
+			if (!$next.length)
+				$next = $(`div[data-channel^="${e.key}"]`)
+				    .first();
+			if ($next.length) {
+				$cur.removeClass('sel');
+				$next.addClass('sel');
+			}
+			break;
+		}
+	};
+
+	window.onkeydown = (e) => {
+		if (e.altKey || e.ctrlKey || e.metaKey)
+			return;
+
+		if (chansel)
+			return chansel_keys(e);
+
+		switch (e.key) {
+		    case '?':
+			$('#toggle_help').trigger('click');
+			break;
+		    case '<':
+			switch_channel(false);
+			break;
+		    case '>':
+			switch_channel(true);
+			break;
+		    default:
+			if (e.shiftKey)
+				return;
+
+			switch(e.key) {
+			    case 'Escape':
 				$('#overlay > * > header:visible')
 				    .trigger('click');
 				break;
-			case 'Left':
-			case 'ArrowLeft':
+			    case 'Left':
+			    case 'ArrowLeft':
 				$('#date_dec').trigger('click');
 				break;
-			case 'Right':
-			case 'ArrowRight':
+			    case 'Right':
+			    case 'ArrowRight':
 				$('#date_inc').trigger('click');
 				break;
-			case 't':
+			    case 't':
 				$('#date_today').trigger('click');
 				break;
-			case 'd':
+			    case 'd':
 				$('#toggle_dl').trigger('click');
 				break;
-			case 'r':
+			    case 'r':
 				$('#refresh').trigger('click');
 				break;
-			case 'm':
+			    case 'm':
 				$('#toggle_sys').trigger('click');
 				break;
-			case 's':
+			    case 's':
 				$('#toggle_settings').trigger('click');
 				break;
-			case 'c': break;
-			default: return;
+			    case 'c':
+				$('#channels div.current').addClass('sel');
+				chansel = true;
+				break;
+			    default:
+				return;
+			}
 		}
 
 		last_key = e.key;

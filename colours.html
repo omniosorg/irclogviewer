@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+	<title>Nick Colours</title>
+	<link rel='stylesheet' href='/css/style.css' />
+	<script src='https://code.jquery.com/jquery-3.6.0.min.js'
+	    integrity='sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4='
+	    crossorigin='anonymous'>
+	</script>
+	<style>
+	#logs {
+		display: grid;
+		grid-template-columns: auto auto auto auto;
+		line-height: 1.8em;
+		grid-gap: 1em;
+	}
+
+	div.bg_dark .log_row:hover{
+		background: #364554 !important;
+	}
+
+	div.bg_light.hlu div {
+		background: var(--omnios-colour-pale);
+	}
+
+	div.bg_dark.hlu div {
+		background: #50350e;
+	}
+
+	.bg_light {
+		background: white;
+	}
+
+	.bg_dark {
+		background: #20252b;
+	}
+	</style>
+	<script type=text/javascript>
+$(() => {
+	const $div = $('#colours');
+	const $hldiv = $div.clone().removeAttr('id').addClass('hlu');
+	const $dhldiv = $hldiv.clone().toggleClass('bg_light bg_dark');
+	const $ddiv = $dhldiv.clone().removeClass('hlu');
+	$div.after($hldiv, $ddiv, $dhldiv);
+});
+	</script>
+</head>
+<body>
+<div id='container'>
+
+<div id='log_container'>
+<div id='logs'>
+	<div id='colours' class='bg_light'>
+		<div class='log_row nick_col_ooce'> nick colour ooce </div>
+		<div class='log_row nick_col_bot'> nick colour bot </div>
+		<div class='log_row nick_col_0'> nick colour 0 </div>
+		<div class='log_row nick_col_1'> nick colour 1 </div>
+		<div class='log_row nick_col_2'> nick colour 2 </div>
+		<div class='log_row nick_col_3'> nick colour 3 </div>
+		<div class='log_row nick_col_4'> nick colour 4 </div>
+		<div class='log_row nick_col_5'> nick colour 5 </div>
+		<div class='log_row nick_col_6'> nick colour 6 </div>
+		<div class='log_row nick_col_7'> nick colour 7 </div>
+		<div class='log_row nick_col_8'> nick colour 8 </div>
+		<div class='log_row nick_col_9'> nick colour 9 </div>
+		<div class='log_row nick_col_10'> nick colour 10 </div>
+		<div class='log_row nick_col_11'> nick colour 11 </div>
+		<div class='log_row nick_col_12'> nick colour 12 </div>
+		<div class='log_row nick_col_13'> nick colour 13 </div>
+		<div class='log_row nick_col_14'> nick colour 14 </div>
+	</div>
+</div>
+</div>
+</body>
+</html>
+
