@@ -479,7 +479,7 @@ $(() => {
 			    $('#logs .log_row:visible:last')
 			    .attr('id');
 
-			if (last !== "undefined" && last !== null) {
+			if (!last === false && $(`#${last}`).length !== 0) {
 				if (last != nlast)
 					$(`#${last}`).after('<hr/>');
 				scroll_hash(`#${last}`, false);
