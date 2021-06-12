@@ -197,6 +197,10 @@ function scroll_hash(hash, hl = true) {
 	}, 500);
 }
 
+function navigate(channel, date = curdate) {
+	document.location.href = `/${channel}/${date}`;
+}
+
 function switch_channel(pn) {
 	const $current = $('#channels .current');
 	let $destination;
@@ -213,8 +217,7 @@ function switch_channel(pn) {
 			$destination = $('#channels div:last');
 	}
 
-	document.location.href =
-	    `/${$destination.attr('data-channel')}/${curdate}`;
+	navigate($destination.attr('data-channel'));
 }
 
 const handlers = {
@@ -325,10 +328,10 @@ $(() => {
 		curdate = result[2];
 	} else if ((result = path.match(/^\/([-a-z]+)/i)) &&
 	    result[1] in channels) {
-		window.location.href = `/${result[1]}/${today}`;
+		navigate(result[1], today);
 		return;
 	} else {
-		window.location.href = `/${defaultchan}/${today}`;
+		navigate(defaultchan, today);
 		return;
 	}
 
@@ -368,8 +371,7 @@ $(() => {
 		enableSelectionDaysInNextAndPreviousMonths: true,
 		onSelect: (date) => {
 			$('#datepicker').prop('disabled', true);
-			document.location.href = `/${curchan}/`
-			    + pik.toString();
+			navigate(curchan, pik.toString());
 		},
 	});
 
@@ -561,8 +563,7 @@ $(() => {
 			break;
 		    case ' ':
 		    case 'Enter':
-			document.location.href =
-			    $cur.find('a').attr('href');
+			navigate($cur.attr('data-channel'));
 			break;
 		    case 'Escape':
 			$cur.removeClass('sel');
