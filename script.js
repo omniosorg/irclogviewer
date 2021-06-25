@@ -41,6 +41,7 @@ let curchan, curdate;
 let pik;
 let lastkey;
 let chansel = false;
+let picker_open = false;
 
 const zero_pad = (num, places) => String(num).padStart(places, '0')
 
@@ -373,6 +374,8 @@ $(() => {
 			$('#datepicker').prop('disabled', true);
 			navigate(curchan, pik.toString());
 		},
+		onOpen: () => { picker_open = true; },
+		onClose: () => { picker_open = false; },
 	});
 
 	if (channels[curchan]['begin'] == curdate)
@@ -611,11 +614,13 @@ $(() => {
 				break;
 			    case 'Left':
 			    case 'ArrowLeft':
-				$('#date_dec').trigger('click');
+				if (!picker_open)
+					$('#date_dec').trigger('click');
 				break;
 			    case 'Right':
 			    case 'ArrowRight':
-				$('#date_inc').trigger('click');
+				if (!picker_open)
+					$('#date_inc').trigger('click');
 				break;
 			    case 't':
 				$('#date_today').trigger('click');
