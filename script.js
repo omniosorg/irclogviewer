@@ -316,6 +316,7 @@ async function draw_logs(chan, date) {
 	try {
 		log_data = await $.getJSON(`/api/${chan}/${date}`);
 	} catch (e) {
+		$('#date_dec, #date_inc').enable();
 		loader.hide();
 		return;
 	}
