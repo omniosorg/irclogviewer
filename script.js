@@ -586,6 +586,11 @@ $(async () => {
 		$('#overlay, #settings_overlay').toggle();
 	});
 
+	$('#channels').on('click', 'div', function(e) {
+		e.preventDefault();
+		draw_logs($(this).attr('data-channel'), curdate);
+	});
+
 	const chansel_keys = (e) => {
 		const $cur = $('#channels div.sel:first');
 		let $next;
