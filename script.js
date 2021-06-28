@@ -33,29 +33,58 @@ const escapere = /[.*+?^${}()|[\]\\]/g;
 const actionre = /^\x01ACTION\s+(.*)\x01$/;
 const linkre = /^(.*?)(<a\s.*<\/a>)(.*)$/;
 
-const online = {};
-const nick_classes = {};
-const nick_regexps = {};
+let online = {};
+let nick_classes = {};
+let nick_regexps = {};
 let channels = {};
 let curchan, curdate;
 let pik;
 let lastkey;
 let chansel = false;
 let picker_open = false;
+let today;
+
+(function($) {
+	$.fn.enable = function()
+	{
+		return this.each(function() {
+			$(this)
+			    .removeClass('disabled')
+			    .prop('disabled', false)
+			    .disabled = false;
+		});
+	};
+
+	$.fn.disable = function()
+	{
+		return this.each(function() {
+			$(this)
+			    .addClass('disabled')
+			    .prop('disabled', true)
+			    .disabled = true;
+		});
+	};
+})(jQuery);
 
 const zero_pad = (num, places) => String(num).padStart(places, '0')
 
 const loader = {
-	show : () => {
-		$('#loading_overlay, #loading_container').show();
-		$('#container, #menu').hide();
+	show : (large = true) => {
+		if (large) {
+			$('#container, #menu').hide();
+			$('#loading_overlay, #loading_container').show();
+		} else {
+			$('#mini_loader').show();
+		}
 
 	},
 	hide : () => {
+		$('html, body').scrollTop(0);
 		$('#container, #menu').show();
 		$('#title span').width($('#channels').width());
 		nologs();
 		$('#loading_overlay, #loading_container').fadeOut();
+		$('#mini_loader').hide();
 	}
 }
 
@@ -85,6 +114,14 @@ function fail_msg(msg) {
 }
 
 function initialise_settings() {
+	if (localStorage.getItem('darkmode') === null) {
+		localStorage.setItem('darkmode',
+		    window.matchMedia('(prefers-color-scheme: dark)').matches);
+	}
+
+	if (localStorage.getItem('hidesys') === 'true')
+		$('#toggle_sys').toggleClass('on off');
+
 	if (localStorage.getItem('darkmode') === 'true')
 		$('#toggle_dl').trigger('click');
 
@@ -190,16 +227,12 @@ function scroll_hash(hash, hl = true) {
 
 	if (hl) {
 		$(hash).addClass('hl').show();
-		document.location.hash = hash;
+		history.replaceState(null, null, hash);
 	}
 
 	$('html, body').animate({
 	    scrollTop: $(hash).offset().top - 60
 	}, 500);
-}
-
-function navigate(channel, date = curdate) {
-	document.location.href = `/${channel}/${date}`;
 }
 
 function switch_channel(pn) {
@@ -218,7 +251,7 @@ function switch_channel(pn) {
 			$destination = $('#channels div:last');
 	}
 
-	navigate($destination.attr('data-channel'));
+	draw_logs($destination.attr('data-channel'), curdate);
 }
 
 const handlers = {
@@ -243,11 +276,171 @@ const handlers = {
 	},
 };
 
-$(() => {
+async function draw_logs(chan, date) {
+	$('#date_dec, #date_inc').disable();
+	loader.show(false);
+
+	document.title = `#${chan} on ${date}`;
+	if (curdate !== date || curchan !== chan) {
+		window.history.pushState("history", document.title,
+		    `/${chan}/${date}`);
+	}
+
+	curdate = date;
+	curchan = chan;
+	today = format_date(new Date());
+
+	$('#title').find('span').text(`#${chan}`);
+
+	$('#channels > div')
+	    .removeClass('current')
+	    .each(function() {
+		$(this).find('a').attr('href',
+		    `/${$(this).attr('data-channel')}/${curdate}`);
+
+		if ($(this).attr('data-channel') === curchan)
+			$(this).addClass('current');
+	});
+
+	const $topic = $('#topic');
+	$topic.text(channels[chan].topic);
+	$topic.html(linkify($topic.html()));
+
+	$('#logs').empty();
+	$('.fail_msg').hide();
+	online = {};
+	nick_classes = {};
+	nick_regexps = {};
+
+	let log_data;
+	try {
+		log_data = await $.getJSON(`/api/${chan}/${date}`);
+	} catch (e) {
+		loader.hide();
+		return;
+	}
+
+	const $template = $('#log_line');
+	const $logs = $('#logs');
+	let longest_nick = 0;
+
+	$.each(log_data, (k, v) => {
+		const nick = v.nick;
+
+		// This is done here so that we don't count nicks
+		// only used in JOIN/PART messages against the
+		// required width of the nick column.
+		if (v.command == 'PRIVMSG') {
+			longest_nick =
+			    Math.max(longest_nick, nick.length);
+		}
+
+		if (nick in online) return
+
+		online[nick] = true;
+		nick_classes[nick] = nick_class(nick);
+
+		try {
+			const safe_nick = nick.replace(
+			    escapere, '\\$&');
+			nick_regexps[nick] = new
+			    RegExp(`\\b${safe_nick}\\b`,
+			    'g')
+		} catch (err) {
+			fail_msg('Invalid characters found in nickname');
+			loader.hide();
+
+			throw(err);
+		}
+	});
+
+	$.each(log_data, (k, v) => {
+		const id = `${v['ts']}${k}`;
+
+		const row = $template.clone().attr('id', id);
+
+		const ts = format_time(new Date(v.ts * 1000));
+
+		row.find('.ts').html(`[${ts}]`);
+		row.find('.ts_link').attr('href', `#${id}`);
+		row.attr('data-cmd', v.command);
+
+		row.find('.nick').attr('data-nick', v.nick);
+
+		if (v.command in handlers) {
+			handlers[v.command](v, row);
+		} else {
+			row.find('.message')
+			    .text(`UNHANDLED ${v.command}`);
+		}
+
+		row.removeClass('hidden');
+
+		$logs.append(row);
+	});
+
+	$('#logs .log_row .nick').on('click', function () {
+		const nick = $(this).attr('data-nick');
+
+		$(`#logs .log_row .nick[data-nick='${nick}']`)
+		    .parent('div.log_row')
+		    .toggleClass('hlu');
+	});
+
+	$logs.append($('<span/>').attr('id', 'end'));
+
+	$('#logs .log_row .nick')
+	    .css('min-width', `${longest_nick + 2}ch`);
+
+	$('.message').each(style_msg);
+
+	if ($('#toggle_sys').hasClass('on')) {
+		$('#toggle_sys')
+		    .toggleClass('on off')
+		    .trigger('click');
+	}
+
+	$('a.ts_link').on('click', function(e) {
+		e.preventDefault();
+
+		if ($(this).parent('.log_row').hasClass('hl')) {
+			$(this).parent('.log_row').removeClass('hl');
+			history.replaceState(null, null,
+			    document.location.pathname);
+
+			return;
+		}
+
+		scroll_hash($(this).attr('href'));
+	});
+
+	if (channels[chan]['begin'] !== curdate)
+		$('#date_dec').enable();
+	if (date !== today)
+		$('#date_inc').enable();
+
+	loader.hide();
+
+	if (document.location.hash)
+		scroll_hash(document.location.hash);
+	else if (curdate == today) {
+		const last = localStorage.getItem(`${curchan}-last`);
+		const nlast = $('#logs .log_row:visible:last')
+		    .attr('id');
+
+		if (!last === false && $(`#${last}`).length !== 0) {
+			if (last != nlast)
+				$(`#${last}`).after('<hr/>');
+			scroll_hash(`#${last}`, false);
+		}
+
+		localStorage.setItem(`${curchan}-last`, nlast);
+	}
+}
+
+$(async () => {
 	if('serviceWorker' in navigator)
 		navigator.serviceWorker.register('/sw.js')
-
-	const path = document.location.pathname;
 
 	$('#toggle_sys').on('click', function(e) {
 		var $rows =
@@ -286,41 +479,37 @@ $(() => {
 		window.location.reload(false);
 	});
 
-	if (localStorage.getItem('darkmode') === null) {
-		localStorage.setItem('darkmode',
-		    window.matchMedia('(prefers-color-scheme: dark)').matches);
-	}
-
 	initialise_settings();
 
 	loader.show();
 
-	$.getJSON('/api/channel', (data) => {
-		const $template = $('#channel_line');
-		const $channels = $('#channels');
-		channels = data;
-
-		$.each(data, (k, v) => {
-			const channel = k;
-
-			const row = $template.clone()
-			    .removeAttr('id')
-			    .attr('data-channel', channel);
-
-			row.find('.channel')
-			    .text(`#${channel}`);
-
-			row.removeClass('hidden');
-
-			$channels.append(row);
-		});
-	}).fail((err) => {
+	try {
+		channels = await $.getJSON('/api/channel');
+	} catch (e) {
 		fail_msg('Error fetching channels');
-
 		loader.hide();
-	}).done(() => {
+	}
 
-	const today = format_date(new Date());
+	const $template = $('#channel_line');
+	const $channels = $('#channels');
+
+	$.each(channels, (k, v) => {
+		const channel = k;
+
+		const row = $template.clone()
+		    .removeAttr('id')
+		    .attr('data-channel', channel);
+
+		row.find('.channel')
+		    .text(`#${channel}`);
+
+		row.removeClass('hidden');
+
+		$channels.append(row);
+	});
+
+	const path = document.location.pathname;
+	today = format_date(new Date());
 
 	let result;
 	if ((result = path.match(/^\/([-a-z]+)\/(\d{4}-\d{2}-\d{2})$/i)) &&
@@ -329,36 +518,17 @@ $(() => {
 		curdate = result[2];
 	} else if ((result = path.match(/^\/([-a-z]+)/i)) &&
 	    result[1] in channels) {
-		navigate(result[1], today);
+		document.location.href = `/${result[1]}/${today}`;
 		return;
 	} else {
-		navigate(defaultchan, today);
+		document.location.href = `/${defaultchan}/${today}`;
 		return;
-	}
-
-	const api_location = `/api${path}`;
-
-	document.title = `#${curchan} on ${curdate}`;
-	$('#title').find('span').text(`#${curchan}`);
-
-	$('#channels > div').each(function() {
-		$(this).find('a').attr('href',
-		    `/${$(this).attr('data-channel')}/${curdate}`);
-
-		if ($(this).attr('data-channel') === curchan)
-			$(this).addClass('current');
-	});
-
-	try {
-		const $topic = $('#topic');
-		$topic.text(channels[curchan].topic);
-		$topic.html(linkify($topic.html()));
-	} catch (err) {
-		console.error(err);
 	}
 
 	channel_regex = new RegExp(
 	    `#(?:${Object.keys(channels).join('|')})\\b`, 'g');
+
+	draw_logs(curchan, curdate);
 
 	pik = new Pikaday({
 		field: $('#datepicker')[0],
@@ -370,131 +540,9 @@ $(() => {
 		format: 'YYYY-MM-DD',
 		showDaysInNextAndPreviousMonths: true,
 		enableSelectionDaysInNextAndPreviousMonths: true,
-		onSelect: (date) => {
-			$('#datepicker').prop('disabled', true);
-			navigate(curchan, pik.toString());
-		},
+		onSelect: (date) => { draw_logs(curchan, pik.toString()); },
 		onOpen: () => { picker_open = true; },
-		onClose: () => { picker_open = false; },
-	});
-
-	if (channels[curchan]['begin'] == curdate)
-		$('#date_dec').prop('disabled', true).addClass('disabled');
-	else if (curdate == today)
-		$('#date_inc').prop('disabled', true).addClass('disabled');
-
-	$.getJSON(api_location, (data) => {
-		const $template = $('#log_line');
-		const $logs = $('#logs');
-		let longest_nick = 0;
-
-		$.each(data, (k, v) => {
-			const nick = v.nick;
-
-			// This is done here so that we don't count nicks
-			// only used in JOIN/PART messages against the
-			// required width of the nick column.
-			if (v.command == 'PRIVMSG') {
-				longest_nick =
-				    Math.max(longest_nick, nick.length);
-			}
-
-			if (nick in online) return
-
-			online[nick] = true;
-			nick_classes[nick] = nick_class(nick);
-
-			try {
-				const safe_nick = nick.replace(
-				    escapere, '\\$&');
-				nick_regexps[nick] = new
-				    RegExp(`\\b${safe_nick}\\b`,
-				    'g')
-			} catch (err) {
-				fail_msg('Invalid characters found in nickname');
-				loader.hide();
-
-				throw(err);
-			}
-		});
-
-		$.each(data, (k, v) => {
-			const id = `${v['ts']}${k}`;
-
-			const row = $template.clone().attr('id', id);
-
-			const ts = format_time(new Date(v.ts * 1000));
-
-			row.find('.ts').html(`[${ts}]`);
-			row.find('.ts_link').attr('href', `#${id}`);
-			row.attr('data-cmd', v.command);
-
-			row.find('.nick').attr('data-nick', v.nick);
-
-			if (v.command in handlers) {
-				handlers[v.command](v, row);
-			} else {
-				row.find('.message')
-				    .text(`UNHANDLED ${v.command}`);
-			}
-
-			row.removeClass('hidden');
-
-			$logs.append(row);
-		});
-
-		$('#logs .log_row .nick').on('click', function () {
-			const nick = $(this).attr('data-nick');
-
-			$(`#logs .log_row .nick[data-nick='${nick}']`)
-			    .parent('div.log_row')
-			    .toggleClass('hlu');
-		});
-
-		$logs.append($('<span/>').attr('id', 'end'));
-
-		$('#logs .log_row .nick')
-		    .css('min-width', `${longest_nick + 2}ch`);
-
-		$('.message').each(style_msg);
-
-		if (localStorage.getItem('hidesys') === 'true')
-			$('#toggle_sys').trigger('click');
-
-		$('a.ts_link').on('click', function(e) {
-			e.preventDefault();
-
-			if ($(this).parent('.log_row').hasClass('hl')) {
-				$(this).parent('.log_row').removeClass('hl');
-				document.location.hash = '+';
-
-				return;
-			}
-
-			scroll_hash($(this).attr('href'));
-		});
-
-		loader.hide();
-
-		if (document.location.hash && document.location.hash !== '#+')
-			scroll_hash(document.location.hash);
-		else if (curdate == today) {
-			const last = localStorage.getItem(`${curchan}-last`);
-			const nlast =
-			    $('#logs .log_row:visible:last')
-			    .attr('id');
-
-			if (!last === false && $(`#${last}`).length !== 0) {
-				if (last != nlast)
-					$(`#${last}`).after('<hr/>');
-				scroll_hash(`#${last}`, false);
-			}
-
-			localStorage.setItem(`${curchan}-last`, nlast);
-		}
-
-	}).fail((err) => {
-		loader.hide();
+		onClose: () => { picker_open = false; }
 	});
 
 	$('#date_today').on('click', () => {
@@ -524,7 +572,8 @@ $(() => {
 	});
 
 	$('#refresh').on('click', () => {
-		window.location.reload(false);
+		history.replaceState(null, null, document.location.pathname);
+		draw_logs(curchan, curdate);
 	});
 
 	$('#toggle_help, #help_overlay > header').on('click', () => {
@@ -566,8 +615,8 @@ $(() => {
 			break;
 		    case ' ':
 		    case 'Enter':
-			navigate($cur.attr('data-channel'));
-			break;
+			draw_logs($cur.attr('data-channel'), curdate);
+			// Fall-through
 		    case 'Escape':
 			$cur.removeClass('sel');
 			chansel = false;
@@ -649,7 +698,5 @@ $(() => {
 		last_key = e.key;
 		e.preventDefault();
 	};
-
-	});
 });
 
