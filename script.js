@@ -355,8 +355,17 @@ async function draw_logs(chan, date) {
 		}
 	});
 
+	let last_ts = 0;
+	let index = 0;
 	$.each(log_data, (k, v) => {
-		const id = `${v['ts']}${k}`;
+		if (v['ts'] == last_ts) {
+			index++;
+		} else {
+			index = 0;
+			last_ts = v['ts'];
+		}
+
+		const id = `${v['ts']}${index}`;
 
 		const row = $template.clone().attr('id', id);
 
