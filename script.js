@@ -426,13 +426,25 @@ async function draw_logs(chan, date) {
 		scroll_hash(document.location.hash);
 	else if (curdate == today) {
 		const last = localStorage.getItem(`${curchan}-last`);
-		const nlast = $('#logs .log_row:visible:last')
-		    .attr('id');
+		const $last = $(`#${last}`);
+		const nlast = $('#logs .log_row:last').attr('id');
 
-		if (!last === false && $(`#${last}`).length !== 0) {
+		if (!last === false && $last.length !== 0) {
 			if (last != nlast)
-				$(`#${last}`).after('<hr/>');
-			scroll_hash(`#${last}`, false);
+				$last.after('<hr/>');
+
+			let scroll_to = last;
+
+			if ($last.is(':hidden')) {
+				let $prev = $last
+				do {
+					$prev = $prev.prev();
+				} while ($prev.length && $prev.is(':hidden'));
+
+				scroll_to = $prev.attr('id');
+			}
+
+			scroll_hash(`#${scroll_to}`, false);
 		}
 
 		localStorage.setItem(`${curchan}-last`, nlast);
