@@ -100,7 +100,7 @@ function format_time(d) {
 		return String(
 		    zero_pad(d.getUTCHours(), 2) + ':' +
 		    zero_pad(d.getUTCMinutes(), 2) + ':' +
-		    zero_pad(d.getUTCSeconds(), 2));
+		    zero_pad(d.getUTCSeconds(), 2) + 'Z');
 	} else {
 		return String(
 		    zero_pad(d.getHours(), 2) + ':' +
@@ -276,7 +276,7 @@ const handlers = {
 	},
 };
 
-async function draw_logs(chan, date) {
+async function draw_logs(chan = curchan, date = curdate) {
 	$('#date_dec, #date_inc').disable();
 	loader.show(false);
 
@@ -498,7 +498,8 @@ $(async () => {
 
 	$('#utc_setting').on('click', function(e) {
 		localStorage.setItem('utc_setting', $(this).is(':checked'));
-		window.location.reload(false);
+		$('#toggle_settings').trigger('click');
+		draw_logs();
 	});
 
 	initialise_settings();
@@ -550,7 +551,7 @@ $(async () => {
 	channel_regex = new RegExp(
 	    `#(?:${Object.keys(channels).join('|')})\\b`, 'g');
 
-	draw_logs(curchan, curdate);
+	draw_logs();
 
 	pik = new Pikaday({
 		field: $('#datepicker')[0],
@@ -595,7 +596,7 @@ $(async () => {
 
 	$('#refresh').on('click', () => {
 		history.replaceState(null, null, document.location.pathname);
-		draw_logs(curchan, curdate);
+		draw_logs();
 	});
 
 	$('#toggle_help, #help_overlay > header').on('click', () => {
