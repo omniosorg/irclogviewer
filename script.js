@@ -100,7 +100,7 @@ function format_time(d) {
 		return String(
 		    zero_pad(d.getUTCHours(), 2) + ':' +
 		    zero_pad(d.getUTCMinutes(), 2) + ':' +
-		    zero_pad(d.getUTCSeconds(), 2));
+		    zero_pad(d.getUTCSeconds(), 2) + 'Z');
 	} else {
 		return String(
 		    zero_pad(d.getHours(), 2) + ':' +
@@ -276,7 +276,7 @@ const handlers = {
 	},
 };
 
-async function draw_logs(chan, date) {
+async function draw_logs(chan = curchan, date = curdate) {
 	$('#date_dec, #date_inc').disable();
 	loader.show(false);
 
@@ -316,6 +316,7 @@ async function draw_logs(chan, date) {
 	try {
 		log_data = await $.getJSON(`/api/${chan}/${date}`);
 	} catch (e) {
+		$('#date_dec, #date_inc').enable();
 		loader.hide();
 		return;
 	}
@@ -354,8 +355,17 @@ async function draw_logs(chan, date) {
 		}
 	});
 
+	let last_ts = 0;
+	let index = 0;
 	$.each(log_data, (k, v) => {
-		const id = `${v['ts']}${k}`;
+		if (v['ts'] == last_ts) {
+			index++;
+		} else {
+			index = 0;
+			last_ts = v['ts'];
+		}
+
+		const id = `${v['ts']}${index}`;
 
 		const row = $template.clone().attr('id', id);
 
@@ -425,13 +435,25 @@ async function draw_logs(chan, date) {
 		scroll_hash(document.location.hash);
 	else if (curdate == today) {
 		const last = localStorage.getItem(`${curchan}-last`);
-		const nlast = $('#logs .log_row:visible:last')
-		    .attr('id');
+		const $last = $(`#${last}`);
+		const nlast = $('#logs .log_row:last').attr('id');
 
-		if (!last === false && $(`#${last}`).length !== 0) {
+		if (!last === false && $last.length !== 0) {
 			if (last != nlast)
-				$(`#${last}`).after('<hr/>');
-			scroll_hash(`#${last}`, false);
+				$last.after('<hr/>');
+
+			let scroll_to = last;
+
+			if ($last.is(':hidden')) {
+				let $prev = $last
+				do {
+					$prev = $prev.prev();
+				} while ($prev.length && $prev.is(':hidden'));
+
+				scroll_to = $prev.attr('id');
+			}
+
+			scroll_hash(`#${scroll_to}`, false);
 		}
 
 		localStorage.setItem(`${curchan}-last`, nlast);
@@ -476,7 +498,8 @@ $(async () => {
 
 	$('#utc_setting').on('click', function(e) {
 		localStorage.setItem('utc_setting', $(this).is(':checked'));
-		window.location.reload(false);
+		$('#toggle_settings').trigger('click');
+		draw_logs();
 	});
 
 	initialise_settings();
@@ -528,7 +551,7 @@ $(async () => {
 	channel_regex = new RegExp(
 	    `#(?:${Object.keys(channels).join('|')})\\b`, 'g');
 
-	draw_logs(curchan, curdate);
+	draw_logs();
 
 	pik = new Pikaday({
 		field: $('#datepicker')[0],
@@ -573,7 +596,7 @@ $(async () => {
 
 	$('#refresh').on('click', () => {
 		history.replaceState(null, null, document.location.pathname);
-		draw_logs(curchan, curdate);
+		draw_logs();
 	});
 
 	$('#toggle_help, #help_overlay > header').on('click', () => {
@@ -584,6 +607,11 @@ $(async () => {
 	$('#toggle_settings, #settings_overlay > header').on('click', () => {
 		if ($('#help_overlay:visible').length) return;
 		$('#overlay, #settings_overlay').toggle();
+	});
+
+	$('#channels').on('click', 'div', function(e) {
+		e.preventDefault();
+		draw_logs($(this).attr('data-channel'), curdate);
 	});
 
 	const chansel_keys = (e) => {
