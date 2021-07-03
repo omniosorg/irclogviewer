@@ -5,15 +5,15 @@
 	<meta name='viewport' content='width=device-width, initial-scale=1.0'>
 	<meta http-equiv='X-UA-Compatible' content='IE=edge'>
 
-	<meta property="og:title" content="OmniOS and illumos IRC logs">
-	<meta name="description"
-	    content="IRC logs for #omnios and other illumos project channels">
-	<meta property="og:description"
-	    content="IRC logs for #omnios and other illumos project channels">
-	<meta property="og:image"
-	    content="https://log.omnios.org/assets/maskable-logo.png">
-	<meta property="og:url" content="https://log.omnios.org">
-	<meta name="twitter:card" content="summary">
+	<meta property='og:title' content='OmniOS and illumos IRC logs'>
+	<meta name='description'
+	    content='IRC logs for #omnios and other illumos project channels'>
+	<meta property='og:description'
+	    content='IRC logs for #omnios and other illumos project channels'>
+	<meta property='og:image'
+	    content='https://log.omnios.org/assets/maskable-logo.png'>
+	<meta property='og:url' content='https://log.omnios.org'>
+	<meta name='twitter:card' content='summary'>
 
 	<title>IRC logs</title>
 
@@ -24,21 +24,26 @@
 	    crossorigin='anonymous'>
 	</script>
 
-	<script src="https://kit.fontawesome.com/596031c7ad.js"
-	    crossorigin="anonymous">
+	<script src='https://kit.fontawesome.com/596031c7ad.js'
+	    crossorigin='anonymous'>
 	</script>
 
-	<script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js">
+	<script src='https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js'>
 	</script>
-	<script src="https://cdn.jsdelivr.net/npm/pikaday@1.8.2/pikaday.min.js">
+	<script src='https://cdn.jsdelivr.net/npm/pikaday@1.8.2/pikaday.min.js'>
 	</script>
-	<script src="https://cdn.jsdelivr.net/npm/pikaday@1.8.2/plugins/pikaday.jquery.js"
-	    integrity="sha256-Msvs+RIuOUjcyMlMwEXek9DS7WaAcAS2JXCr5zloEQk="
-	    crossorigin="anonymous">
+	<script src='https://cdn.jsdelivr.net/npm/pikaday@1.8.2/plugins/pikaday.jquery.js'
+	    integrity='sha256-Msvs+RIuOUjcyMlMwEXek9DS7WaAcAS2JXCr5zloEQk='
+	    crossorigin='anonymous'>
 	</script>
 
-	<link rel="stylesheet" type="text/css"
-	    href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css" />
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/tinysort/3.2.5/tinysort.min.js'
+	    integrity='sha512-P3lisBxY1PusizpelihVrBeciBfWA9r7Ff/8j16b4K399OWJIrY1UdzdE7/BctqKv6Xujr8hp3IA2XiQX3Bsew=='
+	    crossorigin='anonymous' referrerpolicy='no-referrer'>
+	</script>
+
+	<link rel='stylesheet' type='text/css'
+	    href='https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css' />
 
 	<link rel='manifest' href='/manifest.json'>
 	<link rel='apple-touch-icon' href='favicon.ico'>
@@ -47,53 +52,63 @@
 </head>
 <body>
 	<header id='menu'>
-		<span id='title'>IRC logs for <span></span></span>
+		<div id='menu_left'>
+			<span id='title'>IRC logs for <span></span></span>
 
-		<div id='datepicker_container'>
-			<span id='date_dec' title='One day earlier'>
-			    <i class='fas fa-caret-left fa-lg'></i>
+			<div id='datepicker_container'>
+				<span id='date_dec' title='One day earlier'>
+				    <i class='fas fa-caret-left fa-lg'></i>
+				</span>
+
+				<input type='text' id='datepicker'>
+
+				<span id='date_inc' title='One day later'>
+				    <i class='fas fa-caret-right fa-lg'></i>
+				</span>
+			</div>
+
+			<span id='date_today' title='Today'>
+			    <i class='far fa-clock fa-lg'></i>
 			</span>
 
-			<input type='text' id='datepicker'>
+			<span id='refresh' title='Refresh'>
+			    <i class='fas fa-sync-alt fa-lg'></i>
+			</span>
 
-			<span id='date_inc' title='One day later'>
-			    <i class='fas fa-caret-right fa-lg'></i>
+			<span id='scroll_up' title='Scroll to first message'>
+			    <i class='far fa-arrow-alt-circle-up fa-lg'></i>
+			</span>
+
+			<span id='scroll_down' title='Scroll to last message'>
+			    <i class='far fa-arrow-alt-circle-down fa-lg'></i>
+			</span>
+
+			<span id='toggle_dl' title='Toggle light/dark mode'>
+			    <i id='dl_icon' class='far fa-moon fa-lg'></i>
+			</span>
+
+			<span id='toggle_settings' title='Show settings overlay'>
+			    <i id='dl_icon' class='fas fa-cogs fa-lg'></i>
+			</span>
+
+			<span id='toggle_help' title='Show help overlay'>
+			    <i id='dl_icon' class='far fa-question-circle fa-lg'></i>
+			</span>
+
+			<span id='toggle_sys' class='off'
+			   title='Toggle showing join/part messages'>
+				<i class='fas fa-info-circle fa-lg'></i>
+				<span id='toggle_sys_info'>&nbsp;</span>
 			</span>
 		</div>
-
-		<span id='date_today' title='Today'>
-		    <i class='far fa-clock fa-lg'></i>
-		</span>
-
-		<span id='refresh' title='Refresh'>
-		    <i class='fas fa-sync-alt fa-lg'></i>
-		</span>
-
-		<span id='scroll_up' title='Scroll to first message'>
-		    <i class='far fa-arrow-alt-circle-up fa-lg'></i>
-		</span>
-
-		<span id='scroll_down' title='Scroll to last message'>
-		    <i class='far fa-arrow-alt-circle-down fa-lg'></i>
-		</span>
-
-		<span id='toggle_dl' title='Toggle light/dark mode'>
-		    <i id='dl_icon' class='far fa-moon fa-lg'></i>
-		</span>
-
-		<span id='toggle_settings' title='Show settings overlay'>
-		    <i id='dl_icon' class='fas fa-cogs fa-lg'></i>
-		</span>
-
-		<span id='toggle_help' title='Show help overlay'>
-		    <i id='dl_icon' class='far fa-question-circle fa-lg'></i>
-		</span>
-
-		<span id='toggle_sys' class='off'
-		   title='Toggle showing join/part messages'>
-			<i class='fas fa-info-circle fa-lg'></i>
-			<span id='toggle_sys_info'></span>
-		</span>
+		<div id='menu_right'>
+			<div id='menu_search'>
+				<form action=''>
+					<input type='text' name='search' placeholder='chan:<channel> nick:<nick> terms...'>
+					<i class='fa fa-search'></i>
+				</form>
+			</div>
+		</div>
 	</header>
 
 	<div id='loading_overlay'></div>
@@ -102,8 +117,8 @@
 		    class='loading_img'>
 	</div>
 
-	<div id="overlay">
-		<div id="help_overlay">
+	<div id='overlay'>
+		<div id='help_overlay'>
 			<header>
 				<h3>Keyboard shortcuts</h3>
 				<a id='help_close'>Close</a>
@@ -130,6 +145,10 @@
 					<span>Channel picker</span>
 				</div>
 				<div class='shortcut'>
+					<span class='key'>/</span>
+					<span>Open search</span>
+				</div>
+				<div class='shortcut'>
 					<span class='key'>t</span>
 					<span>Go to today</span>
 				</div>
@@ -146,14 +165,6 @@
 					<span>Toggle join/part messages</span>
 				</div>
 				<div class='shortcut'>
-					<span class='key'>&lt;home&gt;</span>
-					<span>Scroll to top</span>
-				</div>
-				<div class='shortcut'>
-					<span class='key'>&lt;end&gt;</span>
-					<span>Scroll to bottom</span>
-				</div>
-				<div class='shortcut'>
 					<span class='key'>s</span>
 					<span>Show settings</span>
 				</div>
@@ -164,7 +175,7 @@
 			</main>
 		</div>
 
-		<div id="settings_overlay">
+		<div id='settings_overlay'>
 			<header>
 				<h3>Settings</h3>
 				<a id='settings_close'>Close</a>
@@ -174,6 +185,76 @@
 					<input type='checkbox' id='utc_setting'>
 						Show UTC times
 					</input>
+				</div>
+			</main>
+		</div>
+
+		<div id='search_overlay'>
+			<header>
+				<h3>Search</h3>
+				<a href='#' id='search_permalink'>
+					<i class='fas fa-link'></i>
+					<span>permalink</span>
+				</a>
+				<a id='search_close'>Close</a>
+			</header>
+			<section id='search_filters'>
+				<div id='search_filter_form'>
+					<form>
+						<label>
+							Channel
+							<select name='chan'>
+								<option value='' selected>-- all --</option>
+							</select>
+						</label>
+						<label>
+							Nick
+							<input name='nick' spellcheck='false'></input>
+						</label>
+						<label>
+							Term
+							<input name='term' spellcheck='false'></input>
+						</label>
+					</form>
+
+					<button id='submit_search_filters'>
+						Search
+					</button>
+				</div>
+			</section>
+			<main>
+				<div id='search_log_container'>
+					<div id='search_loader' class='hidden'>
+						<p>Searching logs&#8230;</p>
+					</div>
+					<div id='search_nologs' class='hidden fail_msg'>
+						No results found.
+					</div>
+					<div id='search_logs'>
+						<div id='search_log_headings' class='log_row_head'>
+							<span data-sort='channel'>Channel <i class="fas fa-sort"></i></span>
+							<span data-sort='rank' data-sort-reverse='true'>Rank <i class="fas fa-sort"></i></span>
+							<span data-sort='ts'>Date/Time <i class="fas fa-sort"></i></span>
+							<span data-sort='nick'>Nick <i class="fas fa-sort"></i></span>
+							<span>Message</span>
+						</div>
+						<hr>
+					</div>
+
+					<div id='search_log_line' class='hidden log_row'>
+						<span class='channel'> </span>
+						<meter class='rank' min='0' max='15' low='5' high='10' optimum='15'>
+							<div class='meter-gauge'>
+								<span></span>
+							</div>
+						</meter>
+						<a href='#' class='ts_link'>
+							<span class='date'></span>
+							<span class='ts'></span>
+						</a>
+						<span class='nick'></span>
+						<span class='message'></span>
+					</div>
 				</div>
 			</main>
 		</div>
