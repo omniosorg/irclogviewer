@@ -3,6 +3,7 @@
 :root {
 	--omnios-colour:#ff9800;
 	--omnios-colour-pale: rgb(255, 152, 0, .4);
+	--container-margin-top: 2.2em;
 }
 
 html {
@@ -13,11 +14,13 @@ html {
 	--text-colour: black;
 	--loading-overlay-bg: rgba(26, 26, 26, 0.7);
 	--icon-colour: black;
+	--icon-alt-colour: #20252b;
 	--disabled-colour: #ccc;
 	--datepicker-bg-colour: #eee;
 	--datepicker-text-colour: black;
 	--datepicker-border-colour: #ccc;
 	--status-colour: #ff4500;
+	--search-bg-colour: #ddd;
 	--menu-bg-colour: white;
 	--shortcut-key-colour: #ddd;
 	--border-colour: var(--omnios-colour);
@@ -28,16 +31,19 @@ html {
 	--ts-link-colour: black;
 	--msg-hover-bg-colour: #eee;
 	--msg-highlight-colour: var(--omnios-colour-pale);
+	--meter-background: whiteSmoke;
 }
 
 html:not(.style-scope)[dark] {
 	--bg-colour: #20252b;
 	--text-colour: #c0c0c0;
 	--icon-colour: #c0c0c0;
+	--icon-alt-colour: #20252b;
 	--disabled-colour: #606060;
 	--datepicker-bg-colour: #364554;
 	--datepicker-text-colour: #c0c0c0;
 	--datepicker-border-colour: #999;
+	--search-bg-colour: #3c4c5b;
 	--menu-bg-colour: #2e3944;
 	--shortcut-key-colour: #364554;
 	--chan-hover-bg-colour: #364554;
@@ -46,6 +52,7 @@ html:not(.style-scope)[dark] {
 	--ts-link-colour: #c0c0c0;
 	--msg-hover-bg-colour: #364554;
 	--msg-highlight-colour: #50350e;
+	--meter-background: var(--menu-bg-colour);
 }
 
 body {
@@ -67,6 +74,72 @@ a {
 	display: none;
 }
 
+.no_scroll {
+	overflow: hidden;
+}
+
+.fail_msg {
+	padding: .75rem 1.25rem;
+	border: 1px solid transparent;
+	border-radius: .25rem;
+	color: #721c24;
+	background-color: #f8d7da;
+	border-color: #f5c6cb;
+}
+
+.log_row, .log_row_head {
+	display: flex;
+	line-height: 1.4em;
+
+	.ts, .nick, .message {
+		padding: 0 .5em;
+	}
+
+	a.ts_link {
+		color: var(--ts-link-colour);
+	}
+
+	.nick {
+		min-width: 8em;
+		text-align: right;
+		font-weight: bold;
+		cursor: pointer;
+	}
+
+	&:hover {
+		background: var(--msg-hover-bg-colour);
+	}
+
+	.message {
+		a {
+			overflow-wrap: break-word;
+			word-wrap: break-word;
+			-ms-word-break: break-all;
+			word-break: break-word;
+			-ms-hyphens: manual;
+			-moz-hyphens: manual;
+			-webkit-hyphens: manual;
+			hyphens: manual;
+		}
+	}
+
+	&.hl, &.hlu {
+		background: var(--msg-highlight-colour);
+	}
+
+	&.hidden {
+		display: none;
+	}
+}
+
+i.fa-sort {
+	color: var(--disabled-colour);
+}
+
+i.fa-link {
+	color: var(--omnios-colour);
+}
+
 #loading_overlay {
 	display: none;
 	background: var(--loading-overlay-bg);
@@ -86,7 +159,7 @@ a {
 	transform: translate( -50%, -50% );
 }
 
-#mini_loader {
+#mini_loader, #search_loader {
 	margin: 1em;
 	color: var(--omnios-colour);
 }
@@ -148,18 +221,191 @@ a {
 			}
 		}
 	}
+
+	#search_overlay {
+		height: 90vh;
+		width: 80vw;
+
+		#search_filters {
+			margin: 1em 0;
+			padding-bottom: 1em;
+			border-bottom: 1px solid var(--topic-border-colour);
+
+			.keyword {
+				display: inline-block;
+				padding: 5px;
+				background: var(--bg-colour);
+				border-radius: 5px;
+				overflow-wrap: anywhere;
+			}
+
+			#search_curr_term {
+				margin: 1em 0;
+			}
+
+			#search_filter_form {
+				display: flex;
+				flex-direction: column;
+
+				form {
+					display: flex;
+					justify-content: space-around;
+					flex-wrap: wrap;
+
+					label {
+						display: flex;
+						flex-direction: column;
+						align-items: center;
+
+						input, select {
+							color:	var(--text-colour);
+							background: var(--bg-colour);
+							outline: none;
+							border: 0;
+							padding: 4px 10px;
+							margin-top: .3em;
+							width: 15vw;
+						}
+					}
+				}
+
+				#submit_search_filters {
+					margin: 1em auto;
+					color:	var(--text-colour);
+					background: var(--bg-colour);
+					outline: none;
+					border: 1px solid var(--text-colour);;
+					padding: 4px 10px;
+				}
+			}
+		}
+
+		main {
+			#search_logs {
+				padding: 1em;
+				background: var(--bg-colour);
+				border-radius: 5px;
+				overflow-y: scroll;
+				height: 70vh;
+
+				#search_log_headings {
+					&:hover {
+						background: inherit;
+					}
+
+					span {
+						&:hover {
+							i.fa {
+								color: var(--msg-hover-bg-colour);
+							}
+						}
+					}
+				}
+
+				.log_row, .log_row_head {
+					display: grid;
+					column-gap: .25em;
+					cursor: pointer;
+
+					.ts {
+						padding: 0;
+						cursor: unset;
+					}
+
+					.nick {
+						min-width: 0;
+						cursor: unset;
+					}
+
+					.message {
+						overflow-wrap: anywhere;
+					}
+
+					.rank {
+						width: 35px;
+						height: 20px;
+
+						&::-webkit-meter-bar {
+							background: none;
+							background-color: var(--meter-background);
+						}
+
+						&::-webkit-meter-optimum-value {
+							background: #8bcf69;
+						}
+						&::-webkit-meter-suboptimum-value {
+							background: #e6d450;
+						}
+						&::-webkit-meter-even-less-good-value {
+							background: #f28f68;
+						}
+
+					/*
+						Trying to style the meter
+						for Firefox makes it look
+						ugly.
+
+						&:-moz-meter-optimum {
+							background-color: #8bcf69;
+						}
+						&:-moz-meter-sub-optimum {
+							background-color: #e6d450;
+						}
+						&:-moz-meter-sub-sub-optimum {
+							background-color: #f28f68;
+						}
+					/**/
+
+						/*
+						 * This is for the HTML
+						 * fallback for browsers that
+						 * do not support <meter>
+						 */
+
+						.meter-gauge {
+							border: 1px solid #ccc;
+							border-radius: 3px;
+							background-color: whiteSmoke;
+							box-shadow: 0 5px 5px -5px #333 inset;
+							width: 35px;
+							height: 10px;
+							display: block;
+							margin-top: 4px;
+
+							span {
+								height: inherit;
+								box-shadow: 0 5px 5px -5px #999 inset;
+								background-color: var(--omnios-colour);
+								background-size: 100% 100%;
+								display: block;
+								text-indent: -9999px;
+							}
+						}
+					}
+				}
+
+				hr {
+					border: none;
+					height: 1px;
+					background: var(--omnios-colour);
+				}
+			}
+		}
+	}
 }
 
 #menu {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
+	justify-content: space-between;
 
 	padding: 0.5em 2em;
 	position: fixed;
 	top: 0;
 	z-index: 10;
 	width: calc(100vw - 4em);
+	height: 20px;
 	background: var(--menu-bg-colour);
 
 	#title {
@@ -218,10 +464,58 @@ a {
 		font-size: 0.8em;
 		margin-left: -5px;
 	}
+
+	#menu_right {
+		margin-right: 1em;
+
+		form {
+			input {
+				transition: width 0.5s;
+				width: 12px;
+				padding: 4px 10px;
+				border-radius: 25px;
+				border: 0;
+				background: var(--search-bg-colour);
+				color: transparent;
+				outline: none;
+
+				&::placeholder {
+					color: transparent;
+				}
+
+				&:focus {
+					color: var(--text-colour);
+
+					&::placeholder {
+						color: grey;
+					}
+				}
+			}
+
+			i.fa {
+				position: absolute;
+				top: 0.7em;
+				right: 3.7em;
+				width: 10px;
+				height: 10px;
+				padding: 2px;
+				border-radius: 25px;
+				margin: auto;
+			}
+
+			&:hover > input {
+				color: var(--text-colour);
+
+				&::placeholder {
+					color: grey;
+				}
+			}
+		}
+	}
 }
 
 #container {
-	margin-top: 2.2em;
+	margin-top: var(--container-margin-top);
 	padding: 0 1em;
 	display: flex;
 	flex-wrap: wrap;
@@ -237,7 +531,7 @@ a {
 		flex-grow: 1;
 		position: fixed;
 		left: 0;
-		top: 2.2em;
+		top: var(--container-margin-top);
 		margin-left: 2em;
 		height: calc(100vh - 4.3em);
 
@@ -274,15 +568,6 @@ a {
 		flex-grow: 999;
 		min-height: calc(100vh - 4.3em);
 
-		.fail_msg {
-			padding: .75rem 1.25rem;
-			border: 1px solid transparent;
-			border-radius: .25rem;
-			color: #721c24;
-			background-color: #f8d7da;
-			border-color: #f5c6cb;
-		}
-
 		#topic {
 			padding: .75rem 1.25rem;
 			margin-bottom: .5em;
@@ -306,7 +591,7 @@ a {
 		}
 
 		#logs {
-			.log_row {
+			.log_row, .log_row_head {
 				display: flex;
 				line-height: 1.4em;
 
@@ -387,7 +672,7 @@ a {
 			min-height: auto;
 
 			#logs {
-				.log_row {
+				.log_row, .log_row_head {
 					flex-wrap: wrap;
 
 					.ts, .nick {
@@ -411,7 +696,7 @@ a {
 	}
 }
 
-[class*="nick_col_"] {
+[class*='nick_col_'] {
 	font-weight: bold;
 }
 
@@ -493,5 +778,9 @@ a {
 
 .channel_col {
 	color: #f00;
+}
+
+.highlight {
+	background: var(--omnios-colour-pale);
 }
 
