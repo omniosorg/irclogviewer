@@ -557,7 +557,7 @@ async function draw_logs(chan = curchan, date = curdate) {
 
 	curdate = date;
 	curchan = chan;
-	today = format_date(new Date(), true);
+	today = format_date(new Date());
 
 	$('#title').find('span').text(`#${chan}`);
 
@@ -586,7 +586,7 @@ async function draw_logs(chan = curchan, date = curdate) {
 	$topic.html(linkify($topic.html()));
 
 	pik.setMinDate(new Date(channels[curchan]['begin'] * 1000));
-	pik.setMaxDate(new Date());
+	pik.setMaxDate(new Date(today));
 
 	const start_ts = get_start_ts(new Date(date));
 
@@ -1034,7 +1034,7 @@ $(async () => {
 		defaultDate: new Date(curdate),
 		setDefaultDate: true,
 		minDate: new Date(channels[curchan]['begin'] * 1000),
-		maxDate: new Date(),
+		maxDate: new Date(today),
 		format: 'YYYY-MM-DD',
 		showDaysInNextAndPreviousMonths: true,
 		enableSelectionDaysInNextAndPreviousMonths: true,
