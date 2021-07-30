@@ -510,10 +510,37 @@ function switch_channel(pn) {
 
 const handlers = {
 	JOIN: (v, r) => {
+		r.addClass('sysmsg');
 		r.find('.message').append(jp_span(true, v.nick));
 	},
 	PART: (v, r) => {
+		r.addClass('sysmsg');
 		r.find('.message').append(jp_span(false, v.nick));
+	},
+	QUIT: (v, r) => {
+		r.addClass('sysmsg');
+		r.find('.message').append(jp_span(false, v.nick));
+	},
+	NICK: (v, r) => {
+
+		/*
+		 * Update the nick cache to use the same colour for the
+		 * new nick as for the old.
+		 */
+
+		if (typeof nick_class.cache !== 'undefined' &&
+		    v.nick in nick_class.cache) {
+			nick_class.cache[v.message] = nick_class.cache[v.nick];
+		}
+		r.find('.message').append(
+		    $('<span/>')
+		    .addClass('nick_col')
+		    .append($('<span/>').text('*** '))
+		    .append(nick_span(v.nick, false, false))
+		    .append($('<span/>').text(' is now known as '))
+		    .append(nick_span(v.message, false, false))
+		    .append($('<span/>').text(' ***'))
+		);
 	},
 	PRIVMSG: (v, r) => {
 		const $msg = r.find('.message')
@@ -905,8 +932,7 @@ $(async () => {
 		navigator.serviceWorker.register('/sw.js')
 
 	$('#toggle_sys').on('click', function() {
-		const $rows =
-		    $(`.log_row[data-cmd='PART'], .log_row[data-cmd='JOIN']`);
+		const $rows = $('.sysmsg');
 
 		$(this).toggleClass('on off');
 		localStorage.setItem('hidesys', $(this).hasClass('on'));
