@@ -385,8 +385,12 @@ function nick_regex(nick) {
 	return nick_regex.cache[nick];
 }
 
+function nick_clean(nick) {
+	return nick.toLowerCase().replaceAll(/^_+|_+$/g, '');
+}
+
 function nick_class(nick) {
-	const _nick = nick.toLowerCase().replaceAll(/^_+|_+$/g, '');
+	const _nick = nick_clean(nick);
 
 	if (typeof nick_class.cache === 'undefined')
 		nick_class.cache = {};
@@ -528,9 +532,12 @@ const handlers = {
 		 * new nick as for the old.
 		 */
 
-		if (typeof nick_class.cache !== 'undefined' &&
-		    v.nick in nick_class.cache) {
-			nick_class.cache[v.message] = nick_class.cache[v.nick];
+		if (typeof nick_class.cache !== 'undefined') {
+			const _nick = nick_clean(v.nick);
+			if (_nick in nick_class.cache) {
+				nick_class.cache[nick_clean(v.message)] =
+				    nick_class.cache[_nick];
+			}
 		}
 		r.find('.message').append(
 		    $('<span/>')
