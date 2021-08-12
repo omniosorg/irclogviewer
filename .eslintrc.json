@@ -138,7 +138,6 @@
         "no-confusing-arrow": "error",
         "no-console": "off",
         "no-constructor-return": "error",
-        "no-continue": "error",
         "no-div-regex": "error",
         "no-duplicate-imports": "error",
         "no-else-return": "error",

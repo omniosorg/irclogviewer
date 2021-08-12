@@ -25,15 +25,21 @@ const nick_col_override = {
 	jinni:		'bot',
 };
 
-// Taken from https://urlregex.com
-const url_regex = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+:~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[-+\.\!\/\\\w]*))?)/g;
+const u_char = '[\\-;:&=\\+\\$,\\w]'
+const u_proto = `(?:https?|ftp)`;
+const u_auth = `(?:${u_char}+@)`;
+const u_host = `(?:(?:[-a-z0-9]\.?)+)`;
+const u_path = `(?:(?:\\/${u_char})+)`;
+const u_query = `(?:\\?${u_char})`;
+const u_hash = `(?:#${u_char})`;
+const url_regex = new RegExp(
+    `${u_proto}:\/\/${u_auth}?${u_host}${u_path}?${u_query}?${u_hash}?`, 'i');
 
 let channel_regex = /#[-\w]+/g;
-const highlight_regex = /\u{1f409}\u{1f404}\u{1f409}(.+?)\u{1f404}\u{1f409}\u{1f404}/ug;
+const highlight_regex = /\u{1f409}\u{1f404}\u{1f409}(.+?)\u{1f404}\u{1f409}\u{1f404}/u;
 const highlight_remove_regex = /[\u{1f409}\u{1f404}]/ug;
 const escapere = /[.*+?^${}()|[\]\\]/g;
 const actionre = /^\x01ACTION\s+(.*)\x01$/;
-const linkre = /^(.*?)(<a\s.*<\/a>)(.*)$/;
 
 const nicklist = new Map();
 let channels = {};
@@ -334,42 +340,6 @@ function initialise_settings() {
 	});
 }
 
-function linkify(text) {
-	return text.replaceAll(url_regex, (url) => {
-		let href = url.replace(/\.$/, '');
-
-		if (!url.includes('('))
-			href = href.replace(/\)$/, '');
-
-		const lhref = href.length;
-
-		return `<a target='_blank' rel='noopener' href='` +
-		    href + `'>` + url.slice(0, lhref) + '</a>' +
-		    url.slice(lhref);
-	})
-}
-
-function channelify(text) {
-	return text.replaceAll(channel_regex, (channel) => {
-		return `<span class='channel_col'>${channel}</span>`;
-	})
-}
-
-function nickify(text) {
-	nicklist.forEach((k, nick) => {
-		text = text.replaceAll(nick_regex(nick),
-		    nick_span(nick, false, false).prop('outerHTML'));
-	});
-
-	return text;
-}
-
-function highlightify(text) {
-	return text.replaceAll(highlight_regex, (phrase, word) => {
-		return `<span class='highlight'>${word}</span>`;
-	})
-}
-
 function highlight_remove(text) {
 	return text.replaceAll(highlight_remove_regex, '');
 }
@@ -381,12 +351,16 @@ function nick_regex(nick) {
 		return nick_regex.cache[nick];
 
 	const safe_nick = nick.replace(escapere, '\\$&');
-	nick_regex.cache[nick] = new RegExp(`\\b${safe_nick}\\b`, 'g');
+	nick_regex.cache[nick] = new RegExp(`^${safe_nick}\\b`, 'g');
 	return nick_regex.cache[nick];
 }
 
+function nick_clean(nick) {
+	return nick.toLowerCase().replaceAll(/^_+|_+$/g, '');
+}
+
 function nick_class(nick) {
-	const _nick = nick.toLowerCase().replaceAll(/^_+|_+$/g, '');
+	const _nick = nick_clean(nick);
 
 	if (typeof nick_class.cache === 'undefined')
 		nick_class.cache = {};
@@ -427,34 +401,119 @@ function jp_span(jp, nick) {
 	        ' the channel ***'));
 }
 
-function style_msg_backend(msg, search = false) {
-	if (msg.includes('://')) {
-		if (search) {
-			// highlighting not yet supported if there is a URL
-			msg = highlight_remove(msg);
+function parse_msg(msg) {
+	const words = msg.split(/(\s+)/).map(v => {
+		// Space
+		if (v.match(/^\s+$/)) {
+			return {
+				type: 'SPACE',
+				val: v
+			};
 		}
-		msg = linkify(msg);
-		let m;
-		if ((m = msg.match(linkre)))
-			msg = nickify(m[1]) + m[2] + nickify(m[3]);
-	} else {
-		msg = nickify(msg);
-		if (msg.includes('#')) msg = channelify(msg);
-		if (search) msg = highlightify(msg);
+		// URI
+		if ((m = v.match(url_regex)) !== null) {
+			let href = v.replace(/\.$/, '');
+			if (!v.includes('('))
+				href = href.replace(/\)$/, '');
+
+			return {
+				type: 'URI',
+				href: href,
+				trailer: v.slice(href.length),
+			};
+
+		}
+		// Channel
+		if ((m = v.match(channel_regex)) !== null) {
+			return {
+				type: 'CHANNEL',
+				val: m[0],
+				trailer: v.slice(m[0].length),
+			};
+		}
+		// Nick
+		for (const n of nicklist.keys()) {
+			if ((m = v.match(nick_regex(n))) !== null) {
+				return {
+					type: 'NICK',
+					nick: n,
+					trailer: v.slice(n.length),
+				};
+			}
+		}
+		// Highlight
+		if ((m = v.match(highlight_regex)) !== null) {
+			val = highlight_remove(v);
+			return {
+				type: 'HIGHLIGHT',
+				val: m[1],
+				leader: v.slice(0, m.index),
+				trailer: val.slice(m.index + m[1].length),
+			};
+		}
+		// Word
+		return { type: 'WORD', val: v };
+	});
+
+	// Build words and spaces into phrases
+	const pwords = [];
+	let phrase = '';
+	for (const w of words) {
+		if (w.type === 'WORD' ||
+		    (phrase.length && w.type === 'SPACE')) {
+			phrase += w.val;
+			continue;
+		} else if (phrase.length) {
+			pwords.push({ type: 'PHRASE', val: phrase });
+			phrase = '';
+		}
+		pwords.push(w);
 	}
-	return msg;
+	if (phrase.length)
+		pwords.push({ type: 'PHRASE', val: phrase });
+
+	return pwords;
 }
 
-function style_msg() {
-	let msg = $(this).html();
-	msg = style_msg_backend(msg);
-	$(this).html(msg);
-}
+function style_msg(_, target) {
+	const words = parse_msg($(target).html());
 
-function style_search_msg() {
-	let msg = $(this).html();
-	msg = style_msg_backend(msg, true);
-	$(this).html(msg);
+	const msg = words.map(v => {
+		switch (v.type) {
+		    case 'PHRASE':
+			return v.val.replaceAll(
+			    /([\u{001d}\u{000d}])(.*?)\u{000f}/ug,
+			    (m, code, str) => {
+				switch (code) {
+				    case `\u001d`:
+					return `<i>${str}</i>`;
+				    case `\u000d`:
+					return `<b>${str}</i>`;
+				    default:
+					return str;
+				}
+			});
+		    case 'URI':
+			return `<a target='_blank' rel='noopener' href='` +
+			    v.href + `'>` + v.href + '</a>' + v.trailer;
+		    case 'CHANNEL':
+			return `<span class='channel_col'>${v.val}</span>` +
+			    v.trailer;
+		    case 'NICK':
+			return nick_span(v.nick, false, false)
+			    .prop('outerHTML') + v.trailer;
+		    case 'HIGHLIGHT':
+			return v.leader +
+			    `<span class='highlight'>${v.val}</span>` +
+			    v.trailer;
+		    case 'SPACE':
+		    case 'WORD':
+		    default:
+			return v.val;
+		}
+	});
+
+	$(target).html(msg.join(""));
 }
 
 function nologs() {
@@ -528,9 +587,12 @@ const handlers = {
 		 * new nick as for the old.
 		 */
 
-		if (typeof nick_class.cache !== 'undefined' &&
-		    v.nick in nick_class.cache) {
-			nick_class.cache[v.message] = nick_class.cache[v.nick];
+		if (typeof nick_class.cache !== 'undefined') {
+			const _nick = nick_clean(v.nick);
+			if (_nick in nick_class.cache) {
+				nick_class.cache[nick_clean(v.message)] =
+				    nick_class.cache[_nick];
+			}
 		}
 		r.find('.message').append(
 		    $('<span/>')
@@ -610,7 +672,7 @@ async function draw_logs(chan = curchan, date = curdate) {
 
 	const $topic = $('#topic');
 	$topic.text(channels[chan].topic);
-	$topic.html(linkify($topic.html()));
+	style_msg(0, '#topic');
 
 	pik.setMinDate(new Date(channels[curchan]['begin'] * 1000));
 	pik.setMaxDate(new Date(today));
@@ -919,7 +981,7 @@ async function draw_search(search) {
 	$('#search_logs .log_row, #search_logs .log_row_head')
 	    .css('grid-template-columns', grid_sizing_str.trim());
 
-	$('#search_logs .message').each(style_search_msg);
+	$('#search_logs .message').each(style_msg);
 
 	$('#search_logs').show();
 	$('#search_log_container,#search_logs').scrollTop(0);
@@ -1052,7 +1114,7 @@ $(async () => {
 	}
 
 	channel_regex = new RegExp(
-	    `#(?:${Object.keys(channels).join('|')})(?!-)\\b`, 'g');
+	    `#(${Object.keys(channels).join('|')})(?!-)\\b`, 'g');
 
 	pik = new Pikaday({
 		field: $('#datepicker')[0],
