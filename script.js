@@ -1073,7 +1073,7 @@ $(async () => {
 		try {
 			initsearch = decodeURIComponent(result[1]);
 		} catch (e) {
-			console.log(e);
+			console.error(e);
 		}
 	// /:channel/:yyyy-mm-dd
 	} else if ((result = path.match(
