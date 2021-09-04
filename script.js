@@ -675,7 +675,7 @@ async function draw_logs(chan = curchan, date = curdate) {
 	style_msg(0, '#topic');
 
 	pik.setMinDate(new Date(channels[curchan]['begin'] * 1000));
-	pik.setMaxDate(new Date(today));
+	pik.setMaxDate(`${today} 00:00:00`);
 
 	const start_ts = get_start_ts(new Date(date));
 
@@ -1073,7 +1073,7 @@ $(async () => {
 		try {
 			initsearch = decodeURIComponent(result[1]);
 		} catch (e) {
-			console.log(e);
+			console.error(e);
 		}
 	// /:channel/:yyyy-mm-dd
 	} else if ((result = path.match(
@@ -1119,10 +1119,10 @@ $(async () => {
 	pik = new Pikaday({
 		field: $('#datepicker')[0],
 		firstDay: 1,
-		defaultDate: new Date(curdate),
+		defaultDate: new Date(`${curdate} 00:00:00`),
 		setDefaultDate: true,
 		minDate: new Date(channels[curchan]['begin'] * 1000),
-		maxDate: new Date(today),
+		maxDate: new Date(`${today} 00:00:00`),
 		format: 'YYYY-MM-DD',
 		showDaysInNextAndPreviousMonths: true,
 		enableSelectionDaysInNextAndPreviousMonths: true,
@@ -1131,10 +1131,10 @@ $(async () => {
 		onClose: () => { picker_open = false; }
 	});
 
-	pik.setDate(curdate);
+	pik.setDate(new Date(`${curdate} 00:00:00`));
 
 	$('#date_today').on('click', () => {
-		pik.setDate(today);
+		pik.setDate(`${today} 00:00:00`);
 	});
 
 	$('#date_inc').on('click', function() {
