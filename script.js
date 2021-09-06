@@ -407,7 +407,7 @@ function parse_msg(msg) {
 		if (v.match(/^\s+$/)) {
 			return {
 				type: 'SPACE',
-				val: v
+				val: v,
 			};
 		}
 		// URI
@@ -418,7 +418,7 @@ function parse_msg(msg) {
 
 			return {
 				type: 'URI',
-				href: href,
+				href: highlight_remove(href),
 				trailer: v.slice(href.length),
 			};
 
