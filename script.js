@@ -351,7 +351,7 @@ function nick_regex(nick) {
 		return nick_regex.cache[nick];
 
 	const safe_nick = nick.replace(escapere, '\\$&');
-	nick_regex.cache[nick] = new RegExp(`^${safe_nick}\\b`, 'g');
+	nick_regex.cache[nick] = new RegExp(`^@?${safe_nick}\\b`);
 	return nick_regex.cache[nick];
 }
 
@@ -407,7 +407,7 @@ function parse_msg(msg) {
 		if (v.match(/^\s+$/)) {
 			return {
 				type: 'SPACE',
-				val: v
+				val: v,
 			};
 		}
 		// URI
@@ -418,7 +418,7 @@ function parse_msg(msg) {
 
 			return {
 				type: 'URI',
-				href: href,
+				href: highlight_remove(href),
 				trailer: v.slice(href.length),
 			};
 
@@ -436,8 +436,8 @@ function parse_msg(msg) {
 			if ((m = v.match(nick_regex(n))) !== null) {
 				return {
 					type: 'NICK',
-					nick: n,
-					trailer: v.slice(n.length),
+					nick: m[0],
+					trailer: v.slice(m[0].length),
 				};
 			}
 		}
