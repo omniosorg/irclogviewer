@@ -412,13 +412,14 @@ function parse_msg(msg) {
 		}
 		// URI
 		if ((m = v.match(url_regex)) !== null) {
+			v = highlight_remove(v);
 			let href = v.replace(/\.$/, '');
 			if (!v.includes('('))
 				href = href.replace(/\)$/, '');
 
 			return {
 				type: 'URI',
-				href: highlight_remove(href),
+				href: href,
 				trailer: v.slice(href.length),
 			};
 
