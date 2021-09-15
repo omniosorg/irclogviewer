@@ -25,15 +25,16 @@ const nick_col_override = {
 	jinni:		'bot',
 };
 
-const u_char = '[\\-;:&=\\+\\$,\\w]'
+const u_char = '[\\-;:&=~\\.\\+\\$,\\w]';
 const u_proto = `(?:https?|ftp)`;
 const u_auth = `(?:${u_char}+@)`;
-const u_host = `(?:(?:[-a-z0-9]\.?)+)`;
-const u_path = `(?:(?:\\/${u_char})+)`;
-const u_query = `(?:\\?${u_char})`;
-const u_hash = `(?:#${u_char})`;
+const u_host = `(?:(?:[-a-z0-9]+\\.?)+)`;
+const u_path = `(?:(?:\\/${u_char}+)+)`;
+const u_query = `(?:\\?${u_char}+)`;
+const u_hash = `(?:#${u_char}+)`;
 const url_regex = new RegExp(
-    `${u_proto}:\/\/${u_auth}?${u_host}${u_path}?${u_query}?${u_hash}?`, 'i');
+    `^(.*)(${u_proto}:\/\/${u_auth}?${u_host}${u_path}?${u_query}?${u_hash}?)`,
+    'i');
 
 let channel_regex = /#[-\w]+/g;
 const highlight_regex = /\u{1f409}\u{1f404}\u{1f409}(.+?)\u{1f404}\u{1f409}\u{1f404}/u;
@@ -403,6 +404,7 @@ function jp_span(jp, nick) {
 
 function parse_msg(msg) {
 	const words = msg.split(/(\s+)/).map(v => {
+		const _v = highlight_remove(v);
 		// Space
 		if (v.match(/^\s+$/)) {
 			return {
@@ -411,49 +413,47 @@ function parse_msg(msg) {
 			};
 		}
 		// URI
-		if ((m = v.match(url_regex)) !== null) {
-			v = highlight_remove(v);
-			let href = v.replace(/\.$/, '');
-			if (!v.includes('('))
-				href = href.replace(/\)$/, '');
+		if ((m = _v.match(url_regex)) !== null) {
+			let href = m[2];
+
+			href = href.replace(/\.$/, '');
 
 			return {
 				type: 'URI',
 				href: href,
-				trailer: v.slice(href.length),
+				leader: m[1],
+				trailer: _v.slice(m[0].length),
 			};
-
 		}
 		// Channel
-		if ((m = v.match(channel_regex)) !== null) {
+		if ((m = _v.match(channel_regex)) !== null) {
 			return {
 				type: 'CHANNEL',
 				val: m[0],
-				trailer: v.slice(m[0].length),
+				trailer: _v.slice(m[0].length),
 			};
 		}
 		// Nick
 		for (const n of nicklist.keys()) {
-			if ((m = v.match(nick_regex(n))) !== null) {
+			if ((m = _v.match(nick_regex(n))) !== null) {
 				return {
 					type: 'NICK',
 					nick: m[0],
-					trailer: v.slice(m[0].length),
+					trailer: _v.slice(m[0].length),
 				};
 			}
 		}
 		// Highlight
 		if ((m = v.match(highlight_regex)) !== null) {
-			val = highlight_remove(v);
 			return {
 				type: 'HIGHLIGHT',
 				val: m[1],
 				leader: v.slice(0, m.index),
-				trailer: val.slice(m.index + m[1].length),
+				trailer: _v.slice(m.index + m[1].length),
 			};
 		}
 		// Word
-		return { type: 'WORD', val: v };
+		return { type: 'WORD', val: _v };
 	});
 
 	// Build words and spaces into phrases
@@ -495,7 +495,8 @@ function style_msg(_, target) {
 				}
 			});
 		    case 'URI':
-			return `<a target='_blank' rel='noopener' href='` +
+			return v.leader +
+			    `<a target='_blank' rel='noopener' href='` +
 			    v.href + `'>` + v.href + '</a>' + v.trailer;
 		    case 'CHANNEL':
 			return `<span class='channel_col'>${v.val}</span>` +
