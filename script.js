@@ -20,6 +20,7 @@ const nick_col_override = {
 	oetiker:	'ooce',
 	mattfidd:	'ooce',
 	fenix:		'bot',
+	'fenix`':	'bot',
 	mrscowley:	'bot',
 	gitomat:	'bot',
 	jinni:		'bot',
