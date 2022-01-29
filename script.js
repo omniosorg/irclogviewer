@@ -31,7 +31,7 @@ const u_hchar = '[/\\-;:&=~\\.\\+\\$,\\w]';
 const u_proto = `(?:https?|ftp)`;
 const u_auth = `(?:${u_char}+@)`;
 const u_host = `(?:(?:[-a-z0-9]+\\.?)+)`;
-const u_path = `(?:(?:\\/${u_char}+)+\/?)`;
+const u_path = `(?:(?:\\/${u_char}*)+\/?)`;
 const u_query = `(?:\\?${u_char}+)`;
 const u_hash = `(?:#${u_hchar}+)`;
 const url_regex = new RegExp(
