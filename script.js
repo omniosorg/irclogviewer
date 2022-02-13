@@ -26,8 +26,8 @@ const nick_col_override = {
 	jinni:		'bot',
 };
 
-const u_char = '[\\-;:&=~\\.\\+\\$,\\w]';
-const u_hchar = '[/\\-;:&=~\\.\\+\\$,\\w]';
+const u_char = '[\\-;:%&=~\\.\\+\\$,\\w]';
+const u_hchar = '[/\\-;:!%&=~\\.\\+\\$,\\w]';
 const u_proto = `(?:https?|ftp)`;
 const u_auth = `(?:${u_char}+@)`;
 const u_host = `(?:(?:[-a-z0-9]+\\.?)+)`;
