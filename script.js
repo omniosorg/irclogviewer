@@ -694,6 +694,11 @@ async function draw_logs(chan = curchan, date = curdate) {
 
 	const $template = $('#log_line');
 	const $logs = $('#logs');
+	log_data.sort((a, b) => {
+		if (a.ts === b.ts)
+			return a.message_id - b.message_id;
+		return a.ts - b.ts;
+	});
 	log_data.forEach(log => {
 		const id = `${log['ts']}-${log['message_id']}`;
 
